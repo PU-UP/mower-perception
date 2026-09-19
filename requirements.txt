@@ -1,0 +1,9 @@
+torch
+torchvision
+transformers>=4.44.0
+pillow
+fastapi
+uvicorn
+python-multipart
+pyyaml
+numpy

@@ -1,0 +1,99 @@
+# 割草机可通行语义分割：数据契约 + 模型配置。
+# 入职后通常只改这个文件和数据根目录，不必动推理代码。
+
+model:
+  name: nvidia/segformer-b0-finetuned-ade-512-512
+  backend: transformers
+  input_long_side: 512
+  overlay_alpha: 0.46
+
+# 产品类别。id 必须从 0 连续编号。
+classes:
+  - id: 0
+    name: ignore
+    name_zh: 忽略
+    color: [0, 0, 0]
+    traversable: false
+    safety: false
+  - id: 1
+    name: grass
+    name_zh: 可割草坪
+    color: [76, 175, 80]
+    traversable: true
+    safety: false
+  - id: 2
+    name: vegetation
+    name_zh: 灌木植被
+    color: [27, 94, 32]
+    traversable: false
+    safety: false
+  - id: 3
+    name: terrain
+    name_zh: 裸土地形
+    color: [161, 136, 111]
+    traversable: false
+    safety: false
+  - id: 4
+    name: paved
+    name_zh: 铺装路面
+    color: [158, 158, 158]
+    traversable: false
+    safety: false
+  - id: 5
+    name: person
+    name_zh: 人与动物
+    color: [229, 57, 53]
+    traversable: false
+    safety: true
+  - id: 6
+    name: vehicle
+    name_zh: 车辆
+    color: [251, 140, 0]
+    traversable: false
+    safety: true
+  - id: 7
+    name: obstacle
+    name_zh: 障碍与结构
+    color: [121, 85, 72]
+    traversable: false
+    safety: false
+  - id: 8
+    name: water
+    name_zh: 水体
+    color: [30, 136, 229]
+    traversable: false
+    safety: true
+  - id: 9
+    name: sky
+    name_zh: 天空
+    color: [179, 229, 252]
+    traversable: false
+    safety: false
+
+# ADE20K 150 类 -> 上面的产品类。未列出的 ADE 类一律映射为 obstacle。
+# 这是零样本起步映射，换成自有数据微调后可以删掉这一段。
+ade20k_to_mower:
+  grass: [9]
+  vegetation: [4, 17, 66, 72]
+  terrain: [13, 16, 29, 46, 68, 94]
+  paved: [3, 6, 11, 52, 53, 54, 91, 121]
+  person: [12, 126]
+  vehicle: [20, 76, 80, 83, 90, 102, 103, 116, 127]
+  water: [21, 26, 60, 109, 113, 128]
+  sky: [2]
+  ignore: []
+  obstacle: [0, 1, 14, 25, 32, 34, 38, 42, 43, 48, 61, 69, 79, 84, 86, 87, 88, 93, 114, 136, 138]
+
+samples:
+  - id: lawn_path
+    file: lawn_path.jpg
+    title: 草地石板路
+    note: 可割区域与铺装边界
+  - id: garden_walk
+    file: garden_walk.jpg
+    title: 园路行人
+    note: 安全类（人）+ 路径
+  - id: backyard_house
+    file: backyard_house.jpg
+    title: 宅前草坪
+    note: 草坪、房屋、天空

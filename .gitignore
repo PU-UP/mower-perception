@@ -42,3 +42,11 @@ next-env.d.ts
 
 # local fetch cache
 /agent-tools
+
+# python
+.venv/
+__pycache__/
+*.py[cod]
+.cache/
+outputs/
+*.npy

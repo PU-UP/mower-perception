@@ -1,0 +1,27 @@
+[project]
+name = "mowerseg"
+version = "0.1.0"
+description = "Lawn-mower traversable semantic segmentation starter"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "torch",
+  "torchvision",
+  "transformers>=4.44.0",
+  "pillow",
+  "fastapi",
+  "uvicorn",
+  "python-multipart",
+  "pyyaml",
+  "numpy",
+]
+
+[project.scripts]
+mowerseg = "mowerseg.cli:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["mowerseg*"]

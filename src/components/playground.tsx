@@ -1,0 +1,300 @@
+"use client"
+
+import { useEffect, useMemo, useRef, useState } from "react"
+import { Leaf, LoaderCircle, ShieldAlert, Upload } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import type { InferResponse, TaxonomyResponse } from "@/lib/types"
+import { cn } from "@/lib/utils"
+
+function toHex(color: number[]) {
+  return `#${color.map((c) => c.toString(16).padStart(2, "0")).join("")}`
+}
+
+function percent(value: number) {
+  return `${(value * 100).toFixed(1)}%`
+}
+
+export function Playground() {
+  const inputRef = useRef<HTMLInputElement>(null)
+  const [taxonomy, setTaxonomy] = useState<TaxonomyResponse | null>(null)
+  const [result, setResult] = useState<InferResponse | null>(null)
+  const [activeSample, setActiveSample] = useState<string>("lawn_path")
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [view, setView] = useState<"overlay" | "mask" | "input">("overlay")
+
+  useEffect(() => {
+    fetch("/api/taxonomy")
+      .then((res) => {
+        if (!res.ok) throw new Error("taxonomy")
+        return res.json()
+      })
+      .then((data: TaxonomyResponse) => {
+        setTaxonomy(data)
+        if (data.samples[0]) void runSample(data.samples[0].id)
+      })
+      .catch(() => setError("后端未就绪，请确认推理服务已启动。"))
+  }, [])
+
+  async function runSample(id: string) {
+    setBusy(true)
+    setError(null)
+    setActiveSample(id)
+    try {
+      const res = await fetch(`/api/infer-sample/${id}`, { method: "POST" })
+      if (!res.ok) throw new Error(await res.text())
+      setResult(await res.json())
+      setView("mask")
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "推理失败")
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function runUpload(file: File) {
+    setBusy(true)
+    setError(null)
+    setActiveSample("upload")
+    try {
+      const body = new FormData()
+      body.append("file", file)
+      const res = await fetch("/api/infer", { method: "POST", body })
+      if (!res.ok) throw new Error(await res.text())
+      setResult(await res.json())
+      setView("overlay")
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "推理失败")
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const preview = useMemo(() => {
+    if (!result) return null
+    if (view === "mask") return result.mask
+    if (view === "input") return result.input
+    return result.overlay
+  }, [result, view])
+
+  return (
+    <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-8 sm:px-6 lg:py-10">
+      <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className="max-w-2xl">
+          <p className="mb-2 text-xs font-medium tracking-[0.18em] text-sage uppercase">
+            MowerSeg Factory
+          </p>
+          <h1 className="font-heading text-3xl font-semibold tracking-tight text-ink sm:text-4xl">
+            割草机可通行语义分割
+          </h1>
+          <p className="mt-3 text-sm leading-7 text-muted-foreground sm:text-base">
+            用 SegFormer-B0（ADE20K）做零样本起步，再映射到草坪产品类别。
+            入职后换成自有数据微调即可，推理、可视化和类别契约不用重写。
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Badge variant="outline">闭集 9 类</Badge>
+          <Badge variant="outline">可输出 overlay / mask</Badge>
+          <Badge variant="secondary">板端学生网起点</Badge>
+        </div>
+      </header>
+
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(280px,0.8fr)]">
+        <Card className="overflow-hidden">
+          <CardHeader className="border-b">
+            <CardTitle>推理结果</CardTitle>
+            <CardDescription>
+              绿为可割草坪，红/橙为安全类，灰为铺装，深蓝绿为灌木。
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="pt-4">
+            <div className="mb-4 flex flex-wrap items-center gap-2">
+              {taxonomy?.samples.map((sample) => (
+                <Button
+                  key={sample.id}
+                  size="sm"
+                  variant={activeSample === sample.id ? "default" : "outline"}
+                  disabled={busy}
+                  onClick={() => runSample(sample.id)}
+                >
+                  {sample.title}
+                </Button>
+              ))}
+              <Button
+                size="sm"
+                variant={activeSample === "upload" ? "default" : "outline"}
+                disabled={busy}
+                onClick={() => inputRef.current?.click()}
+              >
+                <Upload data-icon="inline-start" />
+                上传图片
+              </Button>
+              <input
+                ref={inputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(event) => {
+                  const file = event.target.files?.[0]
+                  if (file) void runUpload(file)
+                }}
+              />
+            </div>
+
+            <div className="relative overflow-hidden rounded-xl bg-muted ring-1 ring-foreground/10">
+              {preview ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={preview}
+                  alt="分割结果"
+                  className="aspect-[16/10] w-full object-cover"
+                />
+              ) : (
+                <div className="flex aspect-[16/10] flex-col items-center justify-center gap-3 px-6 text-center text-sm text-muted-foreground">
+                  {busy ? (
+                    <>
+                      <LoaderCircle className="size-6 animate-spin" />
+                      正在推理，首次加载权重会稍慢。
+                    </>
+                  ) : (
+                    <>
+                      <Leaf className="size-6 text-sage" />
+                      选择一张样例，或上传花园 / 草坪照片。
+                    </>
+                  )}
+                </div>
+              )}
+              {busy && preview ? (
+                <div className="absolute inset-0 flex items-center justify-center bg-background/40 text-sm">
+                  <LoaderCircle className="mr-2 size-4 animate-spin" />
+                  推理中
+                </div>
+              ) : null}
+            </div>
+
+            {result ? (
+              <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+                <div className="flex gap-2">
+                  {(
+                    [
+                      ["overlay", "叠加"],
+                      ["mask", "色块"],
+                      ["input", "原图"],
+                    ] as const
+                  ).map(([key, label]) => (
+                    <Button
+                      key={key}
+                      size="xs"
+                      variant={view === key ? "default" : "ghost"}
+                      onClick={() => setView(key)}
+                    >
+                      {label}
+                    </Button>
+                  ))}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {result.stats.latency_ms.toFixed(0)} ms · {result.stats.device} ·{" "}
+                  {result.stats.model.split("/").at(-1)}
+                </p>
+              </div>
+            ) : null}
+
+            {error ? (
+              <p className="mt-3 text-sm text-destructive">{error}</p>
+            ) : null}
+          </CardContent>
+        </Card>
+
+        <div className="flex flex-col gap-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>产品类别</CardTitle>
+              <CardDescription>
+                配置在 <code>configs/mower_seg.yaml</code>，换数据时先改这里。
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="grid gap-2">
+              {(taxonomy?.classes ?? [])
+                .filter((item) => item.name !== "ignore")
+                .map((item) => (
+                  <div key={item.id} className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2">
+                      <span
+                        className="size-3 rounded-full ring-1 ring-black/10"
+                        style={{ backgroundColor: toHex(item.color) }}
+                      />
+                      <span className="text-sm">{item.name_zh}</span>
+                    </div>
+                    <span className="text-xs text-muted-foreground">
+                      {item.traversable ? "可通行" : item.safety ? "安全" : "禁止"}
+                    </span>
+                  </div>
+                ))}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>像素占比</CardTitle>
+              <CardDescription>当前帧的可割面积和安全类占比。</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {result ? (
+                <div className="grid gap-4">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="rounded-lg bg-muted px-3 py-2">
+                      <p className="text-xs text-muted-foreground">可割草坪</p>
+                      <p className="font-heading text-xl">
+                        {percent(result.stats.traversable_ratio)}
+                      </p>
+                    </div>
+                    <div className="rounded-lg bg-muted px-3 py-2">
+                      <p className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <ShieldAlert className="size-3" />
+                        安全类
+                      </p>
+                      <p className="font-heading text-xl">
+                        {percent(result.stats.safety_ratio)}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="grid gap-2">
+                    {result.stats.classes.map((row) => (
+                      <div key={row.id} className="grid gap-1">
+                        <div className="flex items-center justify-between text-xs">
+                          <span>{row.name_zh}</span>
+                          <span className="text-muted-foreground">
+                            {percent(row.ratio)}
+                          </span>
+                        </div>
+                        <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+                          <div
+                            className={cn("h-full rounded-full")}
+                            style={{
+                              width: `${Math.max(row.ratio * 100, 1.2)}%`,
+                              backgroundColor: toHex(row.color),
+                            }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">推理后显示每类占比。</p>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </div>
+  )
+}
