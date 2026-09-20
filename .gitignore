@@ -12,6 +12,12 @@
 
 # testing
 /coverage
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+.coverage.*
 
 # next.js
 /.next/
@@ -19,19 +25,26 @@
 
 # production
 /build
+/dist/
 
 # misc
 .DS_Store
+Thumbs.db
 *.pem
+*.swp
+*.swo
+*~
 
 # debug
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+*.log
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
 
 # vercel
 .vercel
@@ -43,10 +56,49 @@ next-env.d.ts
 # local fetch cache
 /agent-tools
 
+# IDE / editor
+.idea/
+.vscode/
+*.code-workspace
+
 # python
 .venv/
+venv/
+env/
 __pycache__/
 *.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
 .cache/
+*.egg
+.Python
+pip-wheel-metadata/
+
+# inference / training outputs
 outputs/
+runs/
+wandb/
+mlruns/
+lightning_logs/
+
+# model weights & checkpoints (keep samples; ignore large binaries)
 *.npy
+*.npz
+*.pt
+*.pth
+*.onnx
+*.ckpt
+*.safetensors
+*.bin
+!package-lock.json
+weights/
+checkpoints/
+models/weights/
+.huggingface/
+huggingface/
+
+# OS / temp
+tmp/
+temp/
+*.tmp
