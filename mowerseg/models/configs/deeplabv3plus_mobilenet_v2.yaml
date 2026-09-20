@@ -23,7 +23,11 @@ artifacts:
   rk3588: null
 
 preprocess:
+  # Own long-side resize, then only rescale/normalize — never HF center-crop.
   resize_mode: long_side
+  processor_kwargs:
+    do_resize: false
+    do_center_crop: false
 
 scheduling:
   frequency_hz: null

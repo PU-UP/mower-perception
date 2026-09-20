@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Leaf, LoaderCircle, ShieldAlert, Upload } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -30,6 +30,7 @@ function withModel(url: string, modelId: string) {
 export function Playground() {
   const inputRef = useRef<HTMLInputElement>(null)
   const lastUploadRef = useRef<File | null>(null)
+  const modelIdRef = useRef("segformer_b0_ade20k")
   const [taxonomy, setTaxonomy] = useState<TaxonomyResponse | null>(null)
   const [models, setModels] = useState<ModelCard[]>([])
   const [modelId, setModelId] = useState<string>("segformer_b0_ade20k")
@@ -40,35 +41,19 @@ export function Playground() {
   const [view, setView] = useState<"overlay" | "mask" | "input">("overlay")
 
   useEffect(() => {
-    fetch("/api/taxonomy")
-      .then((res) => {
-        if (!res.ok) throw new Error("taxonomy")
-        return res.json()
-      })
-      .then((data: TaxonomyResponse) => {
-        setTaxonomy(data)
-        const available = data.models ?? []
-        setModels(available)
-        const initial =
-          data.default_model || data.model_id || available[0]?.id || "segformer_b0_ade20k"
-        setModelId(initial)
-        if (data.samples[0]) {
-          void runSample(data.samples[0].id, initial)
-        }
-      })
-      .catch(() => setError("后端未就绪，请确认推理服务已启动。"))
-  }, [])
+    modelIdRef.current = modelId
+  }, [modelId])
 
-  async function runSample(id: string, selectedModel = modelId) {
+  const runSample = useCallback(async (id: string, selectedModel?: string) => {
+    const model = selectedModel ?? modelIdRef.current
     setBusy(true)
     setError(null)
     setActiveSample(id)
     lastUploadRef.current = null
     try {
-      const res = await fetch(
-        withModel(`/api/infer-sample/${id}`, selectedModel),
-        { method: "POST" },
-      )
+      const res = await fetch(withModel(`/api/infer-sample/${id}`, model), {
+        method: "POST",
+      })
       if (!res.ok) throw new Error(await res.text())
       setResult(await res.json())
       setView("mask")
@@ -77,9 +62,10 @@ export function Playground() {
     } finally {
       setBusy(false)
     }
-  }
+  }, [])
 
-  async function runUpload(file: File, selectedModel = modelId) {
+  const runUpload = useCallback(async (file: File, selectedModel?: string) => {
+    const model = selectedModel ?? modelIdRef.current
     setBusy(true)
     setError(null)
     setActiveSample("upload")
@@ -87,7 +73,7 @@ export function Playground() {
     try {
       const body = new FormData()
       body.append("file", file)
-      const res = await fetch(withModel("/api/infer", selectedModel), {
+      const res = await fetch(withModel("/api/infer", model), {
         method: "POST",
         body,
       })
@@ -99,10 +85,39 @@ export function Playground() {
     } finally {
       setBusy(false)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    fetch("/api/taxonomy")
+      .then((res) => {
+        if (!res.ok) throw new Error("taxonomy")
+        return res.json()
+      })
+      .then((data: TaxonomyResponse) => {
+        if (cancelled) return
+        setTaxonomy(data)
+        const available = data.models ?? []
+        setModels(available)
+        const initial =
+          data.default_model || data.model_id || available[0]?.id || "segformer_b0_ade20k"
+        modelIdRef.current = initial
+        setModelId(initial)
+        if (data.samples[0]) {
+          void runSample(data.samples[0].id, initial)
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setError("后端未就绪，请确认推理服务已启动。")
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [runSample])
 
   async function switchModel(nextModel: string) {
     if (nextModel === modelId || busy) return
+    modelIdRef.current = nextModel
     setModelId(nextModel)
     setResult(null)
     if (activeSample === "upload" && lastUploadRef.current) {

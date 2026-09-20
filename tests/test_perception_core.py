@@ -104,15 +104,57 @@ def test_pascal_voc_remapping():
     voc[0, 1] = 15  # person
     voc[0, 2] = 7   # car -> vehicle
     voc[1, 0] = 16  # pottedplant -> vegetation
-    voc[1, 1] = 5   # bottle -> obstacle
+    voc[1, 1] = 4   # boat -> vehicle (not water)
     voc[1, 2] = 99  # unlisted -> obstacle
     mower = taxonomy.remap(voc)
     assert mower[0, 0] == 0
     assert mower[0, 1] == 5
     assert mower[0, 2] == 6
     assert mower[1, 0] == 2
-    assert mower[1, 1] == 7
+    assert mower[1, 1] == 6
     assert mower[1, 2] == 7
+
+
+def test_deeplab_preprocessor_keeps_non_square_edges():
+    """DeepLab must not center-crop; logits cover the full long-side canvas."""
+    from PIL import Image
+
+    from mowerseg.core.frame import Frame
+    from mowerseg.models.registry import load_model_config
+    from mowerseg.tasks.segmentation.preprocess import SegmentationPreprocessor, resize_long_side
+
+    width, height = 1600, 1068
+    band = 160
+    arr = np.full((height, width, 3), 255, dtype=np.uint8)
+    arr[:, :band] = (255, 0, 0)
+    arr[:, -band:] = (0, 0, 255)
+    image = Image.fromarray(arr)
+
+    cfg = load_model_config("deeplabv3plus_mobilenet_v2")
+    pre = SegmentationPreprocessor(cfg)
+    packed = pre(Frame.from_image(image))
+    pixels = np.asarray(packed["pixel_values"])
+    assert pixels.ndim == 4
+    _, _, out_h, out_w = pixels.shape
+
+    expected = resize_long_side(image, cfg.input_long_side)
+    assert (out_w, out_h) == expected.size
+    assert out_w != out_h  # non-square input must stay non-square
+
+    # Reviewer regression: cropped DeepLab tensors were pure white (R/B range 0).
+    red_range = float(pixels[0, 0].max() - pixels[0, 0].min())
+    blue_range = float(pixels[0, 2].max() - pixels[0, 2].min())
+    assert red_range > 0.5
+    assert blue_range > 0.5
+
+    strip = max(1, out_w // 10)
+    left_b = float(pixels[0, 2, :, :strip].mean())
+    center_r = float(pixels[0, 0, :, out_w // 2 - 5 : out_w // 2 + 5].mean())
+    center_b = float(pixels[0, 2, :, out_w // 2 - 5 : out_w // 2 + 5].mean())
+    right_r = float(pixels[0, 0, :, -strip:].mean())
+    # Red left => low blue; blue right => low red; white center keeps both high.
+    assert left_b < center_b
+    assert right_r < center_r
 
 
 def test_apply_taxonomy_remap_can_skip():
