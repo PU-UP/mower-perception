@@ -1,0 +1,33 @@
+# Logical model: SegFormer-B0 fine-tuned on ADE20K.
+# Same logical model may later point to torch / onnx / horizon_x5 / rk3588 artifacts.
+
+name: segformer_b0_ade20k
+task: semantic_segmentation
+loader: transformers
+hub_id: nvidia/segformer-b0-finetuned-ade-512-512
+overlay_alpha: 0.46
+
+input:
+  long_side: 512
+
+output:
+  taxonomy: ade20k
+  num_classes: 150
+  requires_remapping: true
+
+# Backend-specific compiled artifacts. null = use hub_id for torch / not available yet.
+artifacts:
+  torch: null
+  onnx: null
+  horizon_x5: null
+  rk3588: null
+
+preprocess:
+  # Hugging Face AutoImageProcessor handles mean/std for this loader.
+  resize_mode: long_side
+
+# Reserved for future multi-model scheduling (not used by the simple engine yet).
+scheduling:
+  frequency_hz: null
+  enabled: true
+  priority: 0
