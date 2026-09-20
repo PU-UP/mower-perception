@@ -1,11 +1,24 @@
+"""Deprecated SegFormer helper.
+
+Prefer::
+
+    PerceptionEngine(task=..., model=..., backend=\"torch\")
+
+This module remains for import compatibility only.
+"""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
 
 import numpy as np
-import torch
 from PIL import Image
-from transformers import AutoImageProcessor, AutoModelForSemanticSegmentation
+
+from mowerseg.backends.torch_backend import TorchBackend
+from mowerseg.core.frame import Frame
+from mowerseg.models.registry import ModelConfig
+from mowerseg.tasks.segmentation.postprocess import logits_to_label_mask
+from mowerseg.tasks.segmentation.preprocess import SegmentationPreprocessor
 
 
 @dataclass
@@ -15,54 +28,33 @@ class BackboneOutput:
 
 
 class SegFormerBackbone:
-    """Lightweight ADE20K segmentor used as the zero-shot student starter."""
+    """Legacy wrapper: SegFormer ADE20K inference via TorchBackend."""
 
     def __init__(self, model_name: str, long_side: int = 512) -> None:
-        self.long_side = long_side
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.processor = AutoImageProcessor.from_pretrained(model_name)
-        self.model = AutoModelForSemanticSegmentation.from_pretrained(model_name)
-        self.model.to(self.device)
-        self.model.eval()
-
-    def _resize(self, image: Image.Image) -> Image.Image:
-        width, height = image.size
-        long_side = max(width, height)
-        if long_side <= self.long_side:
-            return image
-        scale = self.long_side / long_side
-        size = (max(1, int(width * scale)), max(1, int(height * scale)))
-        return image.resize(size, Image.Resampling.BILINEAR)
-
-    @torch.inference_mode()
-    def predict(self, image: Image.Image) -> BackboneOutput:
-        rgb = image.convert("RGB")
-        resized = self._resize(rgb)
-        inputs = self.processor(images=resized, return_tensors="pt")
-        inputs = {key: value.to(self.device) for key, value in inputs.items()}
-
-        if self.device.type == "cuda":
-            torch.cuda.synchronize()
-        start = torch.cuda.Event(enable_timing=True) if self.device.type == "cuda" else None
-        if start is not None:
-            end = torch.cuda.Event(enable_timing=True)
-            start.record()
-            logits = self.model(**inputs).logits
-            end.record()
-            torch.cuda.synchronize()
-            latency_ms = float(start.elapsed_time(end))
-        else:
-            import time
-
-            t0 = time.perf_counter()
-            logits = self.model(**inputs).logits
-            latency_ms = (time.perf_counter() - t0) * 1000.0
-
-        upsampled = torch.nn.functional.interpolate(
-            logits,
-            size=rgb.size[::-1],
-            mode="bilinear",
-            align_corners=False,
+        self.model_config = ModelConfig(
+            name="segformer_b0_ade20k",
+            task="semantic_segmentation",
+            loader="transformers",
+            hub_id=model_name,
+            input_long_side=long_side,
+            output_taxonomy="ade20k",
+            requires_remapping=True,
         )
-        ade_mask = upsampled.argmax(dim=1)[0].cpu().numpy().astype(np.uint8)
-        return BackboneOutput(ade_mask=ade_mask, latency_ms=round(latency_ms, 1))
+        self.backend = TorchBackend()
+        self.backend.load(self.model_config)
+        self._preprocessor = SegmentationPreprocessor(self.model_config)
+
+    @property
+    def device(self):
+        return self.backend.device
+
+    def predict(self, image: Image.Image) -> BackboneOutput:
+        frame = Frame.from_image(image)
+        inputs = self._preprocessor(frame)
+        raw = self.backend.infer(inputs)
+        width, height = frame.image.size
+        ade_mask = logits_to_label_mask(raw["logits"], (height, width))
+        return BackboneOutput(ade_mask=ade_mask, latency_ms=float(raw["latency_ms"]))
+
+    def close(self) -> None:
+        self.backend.close()

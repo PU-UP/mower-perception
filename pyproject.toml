@@ -1,7 +1,7 @@
 [project]
 name = "mowerseg"
-version = "0.1.0"
-description = "Lawn-mower traversable semantic segmentation starter"
+version = "0.2.0"
+description = "Hardware-agnostic lawn-mower perception runtime (Task × Model × Backend)"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
@@ -16,6 +16,9 @@ dependencies = [
   "numpy",
 ]
 
+[project.optional-dependencies]
+dev = ["pytest"]
+
 [project.scripts]
 mowerseg = "mowerseg.cli:main"
 
@@ -25,3 +28,10 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 include = ["mowerseg*"]
+
+[tool.setuptools.package-data]
+mowerseg = ["models/configs/*.yaml"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]

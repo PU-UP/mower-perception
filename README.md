@@ -1,8 +1,18 @@
-# MowerSeg
+# MowerSeg / Mower Perception
 
-面向智能割草机感知的起步仓库：闭集可通行语义分割。当前用 **SegFormer-B0（ADE20K）** 做零样本推理，再映射到草坪产品类别，直接输出叠加图、色块 mask 和每类占比。
+面向智能割草机的感知起步仓库。当前真正落地的能力：
 
-这是量产学生网的框架，不是 SAM / DA3 上板方案。入职后替换 `configs/mower_seg.yaml` 和自己的数据即可复用同一套推理接口。
+- **Task**: `semantic_segmentation`
+- **Model**: `segformer_b0_ade20k`（SegFormer-B0 / ADE20K 零样本）
+- **Backend**: `torch`（Hugging Face Transformers + PyTorch）
+
+架构目标是硬件无关的感知 runtime：
+
+```text
+Task（做什么） × Model（用什么网） × Backend（在哪执行）
+```
+
+`HorizonBackend` / `RKNNBackend` 已预留接口骨架，尚未接入真实 SDK。
 
 ## 产品类别
 
@@ -14,8 +24,30 @@
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
+pip install pytest
 export PYTHONPATH=.
 python -m mowerseg assets/samples/lawn_path.jpg -o outputs
+```
+
+统一入口（推荐）：
+
+```python
+from mowerseg import PerceptionEngine
+
+engine = PerceptionEngine(
+    task="semantic_segmentation",
+    model="segformer_b0_ade20k",
+    backend="torch",
+    config_path="configs/mower_seg.yaml",
+)
+result = engine.predict("assets/samples/lawn_path.jpg")
+```
+
+兼容旧接口：
+
+```python
+from mowerseg import InferenceEngine
+engine = InferenceEngine("configs/mower_seg.yaml")
 ```
 
 同时开 Web 预览：
@@ -27,15 +59,67 @@ export PYTHONPATH=.
 
 浏览器打开 `http://127.0.0.1:43129`。推理 API 在 `http://127.0.0.1:43131`。
 
-## 目录
+## 架构
 
-- `configs/mower_seg.yaml`：类别、颜色、ADE20K 映射、样例
-- `mowerseg/`：模型加载、映射、可视化、CLI、FastAPI
-- `assets/samples/`：花园 / 草坪样例图
-- `src/`：Next.js 预览页
+```text
+Camera / Image
+      ↓
+    Frame
+      ↓
+PerceptionEngine
+      ↓
+SemanticSegmentationTask  →  preprocess / postprocess / taxonomy remap
+      ↓
+   Backend (torch | horizon* | rknn*)
+      ↓
+SemanticResult → CLI / FastAPI / Robot App
+```
+
+目录要点：
+
+| 路径 | 作用 |
+|------|------|
+| `mowerseg/core/` | Frame / Result / Task / Backend 抽象 |
+| `mowerseg/backends/` | Torch 实现 + Horizon/RKNN skeleton |
+| `mowerseg/tasks/` | 语义分割（depth/privacy 占位） |
+| `mowerseg/models/configs/` | 逻辑模型 yaml 与 artifact 映射 |
+| `mowerseg/pipeline/` | `PerceptionEngine` |
+| `mowerseg/cli.py` / `server.py` | Adapter（不进 core） |
+| `configs/mower_seg.yaml` | 产品类别 + perception 入口 |
+| `tools/deployment/` | Build-time 导出/编译占位（非 runtime） |
+
+## 如何新增 Backend
+
+1. 在 `mowerseg/backends/` 实现 `InferenceBackend`（`load` / `infer` / `close`）
+2. 在 `backends/registry.py` 注册名称
+3. 在对应 model yaml 的 `artifacts:` 下增加编译产物路径
+4. 将 `configs/mower_seg.yaml` 里 `perception.backend` 改为新名称
+
+Backend 只处理 tensor / device，不要写 grass / taxonomy 逻辑。
+
+## 如何新增 Task
+
+1. 在 `mowerseg/tasks/<name>/` 增加 preprocess / postprocess / task
+2. 定义专用 Result（参考 `SemanticResult` / `DepthResult`）
+3. 在 `tasks/registry.py` 注册
+4. 增加 model yaml，`task:` 字段指向新 task
+
+## 如何新增 Model
+
+1. 新增 `mowerseg/models/configs/<model_name>.yaml`
+2. 填写 `loader` / `hub_id` 或 `artifacts`、`output.taxonomy`、`requires_remapping`
+3. 在产品配置里把 `perception.model` 改成新名字
+
+若模型直接输出 mower 类别，设 `requires_remapping: false` 并删除 ADE20K mapping。
+
+## 测试
+
+```bash
+PYTHONPATH=. pytest tests/ -q
+```
 
 ## 换自己的数据
 
 1. 按 yaml 里的 `id` 准备 `images/` 与 `masks/`
-2. 用同一套类别微调轻量分割网（PP-LiteSeg / YOLO26n-sem 等）
-3. 把 `model.name` 换成新权重，推理脚本不用改
+2. 微调轻量分割网后新增 model yaml（`output.taxonomy: mower`）
+3. 改 `perception.model`，CLI / FastAPI / 前端契约保持不变
