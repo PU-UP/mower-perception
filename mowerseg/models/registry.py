@@ -15,6 +15,7 @@ class ModelConfig:
 
     name: str
     task: str
+    display_name: str | None = None
     loader: str = "transformers"
     hub_id: str | None = None
     input_long_side: int = 512
@@ -25,6 +26,10 @@ class ModelConfig:
     artifacts: dict[str, str | None] = field(default_factory=dict)
     preprocess: dict[str, Any] = field(default_factory=dict)
     raw: dict[str, Any] = field(default_factory=dict)
+
+    @property
+    def label(self) -> str:
+        return self.display_name or self.name
 
     def artifact_for(self, backend: str) -> str | None:
         """Return backend-specific artifact path, if configured."""
@@ -50,9 +55,12 @@ def _parse_model_config(raw: dict[str, Any], *, name: str | None = None) -> Mode
     hub_id = raw.get("hub_id")
     if hub_id is None and loader == "transformers":
         hub_id = raw.get("pretrained")
+    resolved_name = str(name or raw.get("name"))
+    display_name = raw.get("display_name")
     return ModelConfig(
-        name=str(name or raw.get("name")),
+        name=resolved_name,
         task=str(raw.get("task", "semantic_segmentation")),
+        display_name=str(display_name) if display_name else None,
         loader=loader,
         hub_id=hub_id,
         input_long_side=int(input_cfg.get("long_side", raw.get("input_long_side", 512))),
@@ -64,6 +72,26 @@ def _parse_model_config(raw: dict[str, Any], *, name: str | None = None) -> Mode
         preprocess=dict(raw.get("preprocess") or {}),
         raw=raw,
     )
+
+
+def describe_model(name_or_path: str | Path) -> dict[str, Any]:
+    """Return a JSON-serializable model card for UI / API listing."""
+    cfg = load_model_config(name_or_path)
+    return {
+        "id": cfg.name,
+        "display_name": cfg.label,
+        "task": cfg.task,
+        "loader": cfg.loader,
+        "hub_id": cfg.hub_id,
+        "output_taxonomy": cfg.output_taxonomy,
+        "requires_remapping": cfg.requires_remapping,
+        "num_classes": cfg.num_classes,
+        "input_long_side": cfg.input_long_side,
+    }
+
+
+def list_model_cards() -> list[dict[str, Any]]:
+    return [describe_model(name) for name in list_models()]
 
 
 def load_model_config(name_or_path: str | Path) -> ModelConfig:

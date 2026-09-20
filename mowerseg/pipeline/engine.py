@@ -17,9 +17,9 @@ class PerceptionEngine:
 
     def __init__(
         self,
-        task: str = "semantic_segmentation",
-        model: str = "segformer_b0_ade20k",
-        backend: str = "torch",
+        task: str | None = None,
+        model: str | None = None,
+        backend: str | None = None,
         *,
         config_path: str | Path | None = None,
         product_config: dict[str, Any] | None = None,
@@ -33,9 +33,9 @@ class PerceptionEngine:
             product_config = load_product_config(config_path)
 
         perception = product_config.get("perception") or {}
-        self.task_name = str(perception.get("task", task))
-        self.model_name = str(perception.get("model", model))
-        self.backend_name = str(perception.get("backend", backend))
+        self.task_name = str(task or perception.get("task") or "semantic_segmentation")
+        self.model_name = str(model or perception.get("model") or "segformer_b0_ade20k")
+        self.backend_name = str(backend or perception.get("backend") or "torch")
         self.product_config = product_config
         self.config_path = Path(config_path) if config_path else None
 
@@ -47,14 +47,24 @@ class PerceptionEngine:
         self.enabled = bool(scheduling.get("enabled", True)) if enabled is True else enabled
         self.priority = priority if priority != 0 else int(scheduling.get("priority", 0))
 
-        self.model_config = self._merge_product_model_overrides(model_config, product_config)
-        taxonomy = taxonomy_from_product_config(product_config)
+        self.model_config = self._merge_product_model_overrides(
+            model_config,
+            product_config,
+            active_model=self.model_name,
+        )
+        taxonomy = taxonomy_from_product_config(
+            product_config,
+            output_taxonomy=self.model_config.output_taxonomy,
+            requires_remapping=self.model_config.requires_remapping,
+            model_name=self.model_name,
+        )
         self.taxonomy: Taxonomy = replace(
             taxonomy,
             overlay_alpha=self.model_config.overlay_alpha,
             input_long_side=self.model_config.input_long_side,
             model_name=self.model_name,
             requires_remapping=self.model_config.requires_remapping,
+            output_taxonomy=self.model_config.output_taxonomy,
         )
 
         self._backend = create_backend(self.backend_name)
@@ -74,10 +84,21 @@ class PerceptionEngine:
     def _merge_product_model_overrides(
         model_config: ModelConfig,
         product_config: dict[str, Any],
+        *,
+        active_model: str,
     ) -> ModelConfig:
-        """Allow legacy configs/mower_seg.yaml model.* to override registry defaults."""
+        """Allow legacy configs/mower_seg.yaml model.* to override registry defaults.
+
+        Overrides only apply to the product-default logical model so playground
+        model switching keeps each registry yaml's hub_id / input size.
+        """
         legacy = product_config.get("model") or {}
         if not legacy:
+            return model_config
+
+        perception = product_config.get("perception") or {}
+        default_model = str(perception.get("model") or model_config.name)
+        if active_model != default_model:
             return model_config
 
         hub_id = model_config.hub_id
@@ -98,9 +119,11 @@ class PerceptionEngine:
         return {
             "task": self.task_name,
             "model": self.model_name,
+            "display_name": self.model_config.label,
             "backend": self.backend_name,
             "device": self.device,
             "hub_id": self.model_config.hub_id,
+            "output_taxonomy": self.model_config.output_taxonomy,
             "frequency_hz": self.frequency_hz,
             "enabled": self.enabled,
             "priority": self.priority,

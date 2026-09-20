@@ -2,6 +2,7 @@
 # Same logical model may later point to torch / onnx / horizon_x5 / rk3588 artifacts.
 
 name: segformer_b0_ade20k
+display_name: SegFormer-B0 (ADE20K)
 task: semantic_segmentation
 loader: transformers
 hub_id: nvidia/segformer-b0-finetuned-ade-512-512

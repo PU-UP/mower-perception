@@ -3,8 +3,11 @@
 面向智能割草机的感知起步仓库。当前真正落地的能力：
 
 - **Task**: `semantic_segmentation`
-- **Model**: `segformer_b0_ade20k`（SegFormer-B0 / ADE20K 零样本）
+- **Models**:
+  - `segformer_b0_ade20k`（SegFormer-B0 / ADE20K 零样本）
+  - `deeplabv3plus_mobilenet_v2`（DeepLabV3+ + MobileNetV2 / PASCAL VOC 零样本）
 - **Backend**: `torch`（Hugging Face Transformers + PyTorch）
+- Web 预览页支持手动切换模型对比效果
 
 架构目标是硬件无关的感知 runtime：
 

@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Leaf, LoaderCircle, ShieldAlert, Upload } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -11,7 +11,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import type { InferResponse, TaxonomyResponse } from "@/lib/types"
+import type { InferResponse, ModelCard, TaxonomyResponse } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
 function toHex(color: number[]) {
@@ -22,9 +22,18 @@ function percent(value: number) {
   return `${(value * 100).toFixed(1)}%`
 }
 
+function withModel(url: string, modelId: string) {
+  const separator = url.includes("?") ? "&" : "?"
+  return `${url}${separator}model=${encodeURIComponent(modelId)}`
+}
+
 export function Playground() {
   const inputRef = useRef<HTMLInputElement>(null)
+  const lastUploadRef = useRef<File | null>(null)
+  const modelIdRef = useRef("segformer_b0_ade20k")
   const [taxonomy, setTaxonomy] = useState<TaxonomyResponse | null>(null)
+  const [models, setModels] = useState<ModelCard[]>([])
+  const [modelId, setModelId] = useState<string>("segformer_b0_ade20k")
   const [result, setResult] = useState<InferResponse | null>(null)
   const [activeSample, setActiveSample] = useState<string>("lawn_path")
   const [busy, setBusy] = useState(false)
@@ -32,24 +41,19 @@ export function Playground() {
   const [view, setView] = useState<"overlay" | "mask" | "input">("overlay")
 
   useEffect(() => {
-    fetch("/api/taxonomy")
-      .then((res) => {
-        if (!res.ok) throw new Error("taxonomy")
-        return res.json()
-      })
-      .then((data: TaxonomyResponse) => {
-        setTaxonomy(data)
-        if (data.samples[0]) void runSample(data.samples[0].id)
-      })
-      .catch(() => setError("后端未就绪，请确认推理服务已启动。"))
-  }, [])
+    modelIdRef.current = modelId
+  }, [modelId])
 
-  async function runSample(id: string) {
+  const runSample = useCallback(async (id: string, selectedModel?: string) => {
+    const model = selectedModel ?? modelIdRef.current
     setBusy(true)
     setError(null)
     setActiveSample(id)
+    lastUploadRef.current = null
     try {
-      const res = await fetch(`/api/infer-sample/${id}`, { method: "POST" })
+      const res = await fetch(withModel(`/api/infer-sample/${id}`, model), {
+        method: "POST",
+      })
       if (!res.ok) throw new Error(await res.text())
       setResult(await res.json())
       setView("mask")
@@ -58,16 +62,21 @@ export function Playground() {
     } finally {
       setBusy(false)
     }
-  }
+  }, [])
 
-  async function runUpload(file: File) {
+  const runUpload = useCallback(async (file: File, selectedModel?: string) => {
+    const model = selectedModel ?? modelIdRef.current
     setBusy(true)
     setError(null)
     setActiveSample("upload")
+    lastUploadRef.current = file
     try {
       const body = new FormData()
       body.append("file", file)
-      const res = await fetch("/api/infer", { method: "POST", body })
+      const res = await fetch(withModel("/api/infer", model), {
+        method: "POST",
+        body,
+      })
       if (!res.ok) throw new Error(await res.text())
       setResult(await res.json())
       setView("overlay")
@@ -76,6 +85,50 @@ export function Playground() {
     } finally {
       setBusy(false)
     }
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    fetch("/api/taxonomy")
+      .then((res) => {
+        if (!res.ok) throw new Error("taxonomy")
+        return res.json()
+      })
+      .then((data: TaxonomyResponse) => {
+        if (cancelled) return
+        setTaxonomy(data)
+        const available = data.models ?? []
+        setModels(available)
+        const initial =
+          data.default_model || data.model_id || available[0]?.id || "segformer_b0_ade20k"
+        modelIdRef.current = initial
+        setModelId(initial)
+        if (data.samples[0]) {
+          void runSample(data.samples[0].id, initial)
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setError("后端未就绪，请确认推理服务已启动。")
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [runSample])
+
+  async function switchModel(nextModel: string) {
+    if (nextModel === modelId || busy) return
+    modelIdRef.current = nextModel
+    setModelId(nextModel)
+    setResult(null)
+    if (activeSample === "upload" && lastUploadRef.current) {
+      await runUpload(lastUploadRef.current, nextModel)
+      return
+    }
+    const sampleId =
+      activeSample !== "upload"
+        ? activeSample
+        : taxonomy?.samples[0]?.id ?? "lawn_path"
+    await runSample(sampleId, nextModel)
   }
 
   const preview = useMemo(() => {
@@ -84,6 +137,10 @@ export function Playground() {
     if (view === "input") return result.input
     return result.overlay
   }, [result, view])
+
+  const activeModel =
+    models.find((item) => item.id === modelId) ||
+    models.find((item) => item.id === result?.model?.id)
 
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-8 sm:px-6 lg:py-10">
@@ -96,13 +153,13 @@ export function Playground() {
             割草机可通行语义分割
           </h1>
           <p className="mt-3 text-sm leading-7 text-muted-foreground sm:text-base">
-            用 SegFormer-B0（ADE20K）做零样本起步，再映射到草坪产品类别。
-            入职后换成自有数据微调即可，推理、可视化和类别契约不用重写。
+            在同一产品类别契约下手动切换模型对比效果。当前支持 ADE20K /
+            PASCAL VOC 零样本映射，入职后换成自有数据微调即可。
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Badge variant="outline">闭集 9 类</Badge>
-          <Badge variant="outline">可输出 overlay / mask</Badge>
+          <Badge variant="outline">可切换模型</Badge>
           <Badge variant="secondary">板端学生网起点</Badge>
         </div>
       </header>
@@ -116,37 +173,63 @@ export function Playground() {
             </CardDescription>
           </CardHeader>
           <CardContent className="pt-4">
-            <div className="mb-4 flex flex-wrap items-center gap-2">
-              {taxonomy?.samples.map((sample) => (
+            <div className="mb-4 flex flex-col gap-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                  模型
+                </span>
+                {(models.length > 0
+                  ? models
+                  : [
+                      {
+                        id: modelId,
+                        display_name: modelId,
+                      } as ModelCard,
+                    ]
+                ).map((item) => (
+                  <Button
+                    key={item.id}
+                    size="sm"
+                    variant={modelId === item.id ? "default" : "outline"}
+                    disabled={busy}
+                    onClick={() => void switchModel(item.id)}
+                  >
+                    {item.display_name}
+                  </Button>
+                ))}
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                {taxonomy?.samples.map((sample) => (
+                  <Button
+                    key={sample.id}
+                    size="sm"
+                    variant={activeSample === sample.id ? "default" : "outline"}
+                    disabled={busy}
+                    onClick={() => runSample(sample.id)}
+                  >
+                    {sample.title}
+                  </Button>
+                ))}
                 <Button
-                  key={sample.id}
                   size="sm"
-                  variant={activeSample === sample.id ? "default" : "outline"}
+                  variant={activeSample === "upload" ? "default" : "outline"}
                   disabled={busy}
-                  onClick={() => runSample(sample.id)}
+                  onClick={() => inputRef.current?.click()}
                 >
-                  {sample.title}
+                  <Upload data-icon="inline-start" />
+                  上传图片
                 </Button>
-              ))}
-              <Button
-                size="sm"
-                variant={activeSample === "upload" ? "default" : "outline"}
-                disabled={busy}
-                onClick={() => inputRef.current?.click()}
-              >
-                <Upload data-icon="inline-start" />
-                上传图片
-              </Button>
-              <input
-                ref={inputRef}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={(event) => {
-                  const file = event.target.files?.[0]
-                  if (file) void runUpload(file)
-                }}
-              />
+                <input
+                  ref={inputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(event) => {
+                    const file = event.target.files?.[0]
+                    if (file) void runUpload(file)
+                  }}
+                />
+              </div>
             </div>
 
             <div className="relative overflow-hidden rounded-xl bg-muted ring-1 ring-foreground/10">
@@ -202,7 +285,9 @@ export function Playground() {
                 </div>
                 <p className="text-xs text-muted-foreground">
                   {result.stats.latency_ms.toFixed(0)} ms · {result.stats.device} ·{" "}
-                  {result.stats.model.split("/").at(-1)}
+                  {result.model?.display_name ||
+                    activeModel?.display_name ||
+                    result.stats.model.split("/").at(-1)}
                 </p>
               </div>
             ) : null}
@@ -214,6 +299,37 @@ export function Playground() {
         </Card>
 
         <div className="flex flex-col gap-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>当前模型</CardTitle>
+              <CardDescription>
+                逻辑模型与源数据集 taxonomy，切换后会重新推理当前样例。
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="grid gap-2 text-sm">
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-muted-foreground">名称</span>
+                <span className="text-right">
+                  {activeModel?.display_name || modelId}
+                </span>
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-muted-foreground">权重</span>
+                <span className="max-w-[180px] truncate text-right text-xs">
+                  {activeModel?.hub_id || result?.stats.model || "—"}
+                </span>
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-muted-foreground">源类别</span>
+                <span className="text-right">
+                  {activeModel?.output_taxonomy ||
+                    result?.model?.output_taxonomy ||
+                    "—"}
+                </span>
+              </div>
+            </CardContent>
+          </Card>
+
           <Card>
             <CardHeader>
               <CardTitle>产品类别</CardTitle>

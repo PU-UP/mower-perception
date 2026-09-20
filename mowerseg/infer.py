@@ -62,9 +62,21 @@ class InferenceResult:
 class InferenceEngine:
     """Compatibility wrapper around PerceptionEngine."""
 
-    def __init__(self, config_path: str | Path) -> None:
+    def __init__(
+        self,
+        config_path: str | Path,
+        *,
+        model: str | None = None,
+        backend: str | None = None,
+        task: str | None = None,
+    ) -> None:
         self.config_path = Path(config_path)
-        self._engine = PerceptionEngine(config_path=self.config_path)
+        self._engine = PerceptionEngine(
+            config_path=self.config_path,
+            model=model,
+            backend=backend,
+            task=task,
+        )
         self.taxonomy: Taxonomy = self._engine.taxonomy
 
     @property
