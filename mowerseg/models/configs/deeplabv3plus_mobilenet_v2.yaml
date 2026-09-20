@@ -1,0 +1,31 @@
+# Logical model: DeepLabV3+ with MobileNetV2 backbone (PASCAL VOC).
+# HF Transformers: MobileNetV2ForSemanticSegmentation.
+
+name: deeplabv3plus_mobilenet_v2
+display_name: DeepLabV3+ + MobileNetV2
+task: semantic_segmentation
+loader: transformers
+hub_id: google/deeplabv3_mobilenet_v2_1.0_513
+overlay_alpha: 0.46
+
+input:
+  long_side: 513
+
+output:
+  taxonomy: pascal_voc
+  num_classes: 21
+  requires_remapping: true
+
+artifacts:
+  torch: null
+  onnx: null
+  horizon_x5: null
+  rk3588: null
+
+preprocess:
+  resize_mode: long_side
+
+scheduling:
+  frequency_hz: null
+  enabled: true
+  priority: 0

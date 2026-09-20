@@ -33,7 +33,7 @@ def apply_taxonomy_remap(
 ) -> np.ndarray:
     if not requires_remapping or taxonomy is None:
         return raw_mask
-    return taxonomy.remap_ade(raw_mask)
+    return taxonomy.remap(raw_mask)
 
 
 def build_semantic_views(

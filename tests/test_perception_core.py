@@ -41,10 +41,21 @@ def test_model_config_loading_and_artifacts():
     assert cfg.task == "semantic_segmentation"
     assert cfg.loader == "transformers"
     assert cfg.hub_id == "nvidia/segformer-b0-finetuned-ade-512-512"
+    assert cfg.display_name == "SegFormer-B0 (ADE20K)"
     assert cfg.output_taxonomy == "ade20k"
     assert cfg.requires_remapping is True
     assert cfg.artifact_for("torch") == cfg.hub_id
     assert "segformer_b0_ade20k" in list_models()
+    assert "deeplabv3plus_mobilenet_v2" in list_models()
+
+
+def test_deeplabv3plus_mobilenet_v2_config():
+    cfg = load_model_config("deeplabv3plus_mobilenet_v2")
+    assert cfg.display_name == "DeepLabV3+ + MobileNetV2"
+    assert cfg.hub_id == "google/deeplabv3_mobilenet_v2_1.0_513"
+    assert cfg.output_taxonomy == "pascal_voc"
+    assert cfg.input_long_side == 513
+    assert cfg.requires_remapping is True
 
 
 def test_model_config_custom_artifact_path(tmp_path: Path):
@@ -84,6 +95,24 @@ def test_taxonomy_remapping():
     assert mower[0, 1] == 9
     assert mower[0, 2] == 5
     assert mower[0, 3] == 7
+
+
+def test_pascal_voc_remapping():
+    taxonomy = load_taxonomy(PRODUCT_CFG, output_taxonomy="pascal_voc")
+    voc = np.zeros((2, 3), dtype=np.uint8)
+    voc[0, 0] = 0   # background -> ignore
+    voc[0, 1] = 15  # person
+    voc[0, 2] = 7   # car -> vehicle
+    voc[1, 0] = 16  # pottedplant -> vegetation
+    voc[1, 1] = 5   # bottle -> obstacle
+    voc[1, 2] = 99  # unlisted -> obstacle
+    mower = taxonomy.remap(voc)
+    assert mower[0, 0] == 0
+    assert mower[0, 1] == 5
+    assert mower[0, 2] == 6
+    assert mower[1, 0] == 2
+    assert mower[1, 1] == 7
+    assert mower[1, 2] == 7
 
 
 def test_apply_taxonomy_remap_can_skip():
@@ -144,6 +173,57 @@ def test_product_config_perception_section():
     taxonomy = taxonomy_from_product_config(raw)
     assert taxonomy.model_name == "segformer_b0_ade20k"
     assert taxonomy.by_id(1).traversable is True
+
+
+def test_engine_model_override_keeps_registry_hub():
+    from mowerseg.models.registry import load_model_config
+    from mowerseg.pipeline.engine import PerceptionEngine
+
+    product = {
+        "perception": {
+            "task": "semantic_segmentation",
+            "model": "segformer_b0_ade20k",
+            "backend": "torch",
+        },
+        "model": {
+            "name": "nvidia/segformer-b0-finetuned-ade-512-512",
+            "input_long_side": 480,
+            "overlay_alpha": 0.5,
+        },
+        "classes": [
+            {
+                "id": 0,
+                "name": "ignore",
+                "name_zh": "忽略",
+                "color": [0, 0, 0],
+                "traversable": False,
+                "safety": False,
+            },
+            {
+                "id": 7,
+                "name": "obstacle",
+                "name_zh": "障碍",
+                "color": [1, 2, 3],
+                "traversable": False,
+                "safety": False,
+            },
+        ],
+        "ade20k_to_mower": {"obstacle": [0]},
+        "pascal_voc_to_mower": {"ignore": [0]},
+    }
+    seg = load_model_config("segformer_b0_ade20k")
+    deeplab = load_model_config("deeplabv3plus_mobilenet_v2")
+    merged_default = PerceptionEngine._merge_product_model_overrides(
+        seg, product, active_model="segformer_b0_ade20k"
+    )
+    merged_other = PerceptionEngine._merge_product_model_overrides(
+        deeplab, product, active_model="deeplabv3plus_mobilenet_v2"
+    )
+    assert merged_default.hub_id == "nvidia/segformer-b0-finetuned-ade-512-512"
+    assert merged_default.input_long_side == 480
+    assert merged_other.hub_id == "google/deeplabv3_mobilenet_v2_1.0_513"
+    assert merged_other.input_long_side == 513
+    assert merged_other.overlay_alpha == 0.46
 
 
 def test_list_tasks():

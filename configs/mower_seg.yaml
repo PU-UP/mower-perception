@@ -91,6 +91,16 @@ ade20k_to_mower:
   ignore: []
   obstacle: [0, 1, 14, 25, 32, 34, 38, 42, 43, 48, 61, 69, 79, 84, 86, 87, 88, 93, 114, 136, 138]
 
+# PASCAL VOC 21 类 -> 产品类（DeepLabV3+ MobileNetV2 等 VOC 预训练权重）。
+# VOC 没有草坪/天空/铺装细类，未列出的 id（含 background=0）默认 obstacle。
+pascal_voc_to_mower:
+  vegetation: [16]
+  person: [3, 8, 10, 12, 13, 15, 17]
+  vehicle: [1, 2, 6, 7, 14, 19]
+  water: [4]
+  obstacle: [5, 9, 11, 18, 20]
+  ignore: [0]
+
 samples:
   - id: lawn_path
     file: lawn_path.jpg
