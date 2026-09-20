@@ -53,6 +53,7 @@ engine = InferenceEngine("configs/mower_seg.yaml")
 同时开 Web 预览：
 
 ```bash
+npm ci
 export PYTHONPATH=.
 ./scripts/dev.sh
 ```
