@@ -31,7 +31,7 @@ async def lifespan(_app: FastAPI):
     yield
 
 
-app = FastAPI(title="MowerSeg", version="0.1.0", lifespan=lifespan)
+app = FastAPI(title="MowerSeg", version="0.2.0", lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -78,20 +78,36 @@ def _run(image: Image.Image) -> dict:
 def health() -> dict:
     ready = True
     try:
-        device = str(engine().backbone.device)
-        model = engine().taxonomy.model_name
+        info = engine().info()
+        device = info["device"]
+        model = info["model"]
+        backend = info["backend"]
+        task = info["task"]
     except Exception as exc:  # pragma: no cover - startup diagnostics
         ready = False
         device = "unknown"
         model = str(exc)
-    return {"ok": ready, "device": device, "model": model}
+        backend = "unknown"
+        task = "unknown"
+    return {
+        "ok": ready,
+        "device": device,
+        "model": model,
+        "backend": backend,
+        "task": task,
+    }
 
 
 @app.get("/api/taxonomy")
 def taxonomy() -> dict:
     cfg = load_taxonomy(CONFIG)
+    info = engine().info()
     return {
-        "model": cfg.model_name,
+        "model": info.get("hub_id") or cfg.model_name,
+        "model_id": info["model"],
+        "backend": info["backend"],
+        "task": info["task"],
+        "device": info["device"],
         "classes": [
             {
                 "id": item.id,

@@ -1,9 +1,16 @@
-# 割草机可通行语义分割：数据契约 + 模型配置。
-# 入职后通常只改这个文件和数据根目录，不必动推理代码。
+# 割草机可通行语义分割：产品类别契约 + 感知入口配置。
+# Task / Model / Backend 解耦后，通常只改本文件的 classes / mapping，
+# 以及 mowerseg/models/configs/ 下的模型 yaml。
 
+perception:
+  task: semantic_segmentation
+  model: segformer_b0_ade20k
+  backend: torch
+
+# 兼容字段：可覆盖模型 registry 中的 hub 权重与预处理尺寸。
 model:
   name: nvidia/segformer-b0-finetuned-ade-512-512
-  backend: transformers
+  backend: torch
   input_long_side: 512
   overlay_alpha: 0.46
 
@@ -71,7 +78,7 @@ classes:
     safety: false
 
 # ADE20K 150 类 -> 上面的产品类。未列出的 ADE 类一律映射为 obstacle。
-# 这是零样本起步映射，换成自有数据微调后可以删掉这一段。
+# 零样本起步映射；换成自有数据微调且 output taxonomy = mower 后可删除。
 ade20k_to_mower:
   grass: [9]
   vegetation: [4, 17, 66, 72]
