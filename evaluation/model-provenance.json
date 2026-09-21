@@ -31,5 +31,16 @@
     "grassseghb": "No explicit license found; commercial permission unconfirmed",
     "ycor": "CC BY 4.0 on official page",
     "rellis3d": "CC BY-NC-SA 3.0 on official page"
+  },
+  "measured_parameters": {
+    "mit_resnet18_ade20k_including_auxiliary_head": 24566636,
+    "segformer_b0_ade20k": 3752694
+  },
+  "measurement_hardware": {
+    "gpu": "NVIDIA GeForce RTX 5060 Laptop GPU",
+    "memory_mib": 8151,
+    "driver": "592.27",
+    "cpu": "Intel Core i9-14900HX",
+    "wsl": "Ubuntu-22.04"
   }
 }
