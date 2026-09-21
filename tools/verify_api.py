@@ -17,6 +17,8 @@ def main():
     results = []
     with urllib.request.urlopen(args.origin + "/api/models", timeout=120) as response:
         models = json.load(response)["models"]
+    with urllib.request.urlopen(args.origin + "/api/grass", timeout=120) as response:
+        dataset = json.load(response)
     for model in models:
         for sample in ("lawn_path", "garden_walk", "backyard_house"):
             req = urllib.request.Request(f"{args.origin}/api/infer-sample/{sample}?model={model['id']}", data=b"", method="POST")
@@ -37,6 +39,18 @@ def main():
         sizes = [Image.open(BytesIO(base64.b64decode(payload[k].split(",", 1)[1]))).size for k in ("input", "mask", "overlay")]
         assert len(set(sizes)) == 1
         results.append({"model": model["id"], "upload": "garden_walk.jpg", "preview_size": sizes[0], "input_shape": payload["stats"]["input_shape"], "ok": True})
+        if dataset["samples"]:
+            sample_id = dataset["samples"][0]["id"]
+            req = urllib.request.Request(f"{args.origin}/api/infer-sample/grass-{sample_id}?model={model['id']}", data=b"", method="POST")
+            with urllib.request.urlopen(req, timeout=180) as response:
+                payload = json.load(response)
+            assert payload["model"]["id"] == model["id"]
+            if model["output_taxonomy"] == "ade20k":
+                assert "mowable_iou" in payload["evaluation"]
+                assert all(v is None or 0 <= v <= 1 for v in payload["evaluation"].values())
+            else:
+                assert payload["evaluation"] is None
+            results.append({"model": model["id"], "dataset_sample": sample_id, "metrics": payload["evaluation"], "ok": True})
         print(f"Verified {model['id']}: 3 samples + multipart upload", flush=True)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(results, indent=2)+"\n")

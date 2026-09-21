@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import Any
+from mowerseg.models.hf_cache import from_pretrained_cached
 
 import numpy as np
 
@@ -42,8 +43,8 @@ class TorchBackend(InferenceBackend):
                 raise ValueError(
                     f"Model '{model_config.name}' has no torch artifact or hub_id"
                 )
-            self._model = AutoModelForSemanticSegmentation.from_pretrained(
-                source, revision=model_config.raw.get("revision")
+            self._model = from_pretrained_cached(
+                AutoModelForSemanticSegmentation, source, revision=model_config.raw.get("revision")
             )
             if model_config.output_taxonomy == "ade20k":
                 if self._model.config.num_labels != 150 or self._model.config.id2label.get(9) != "grass":

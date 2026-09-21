@@ -117,51 +117,24 @@ Backend 只处理 tensor / device，不要写 grass / taxonomy 逻辑。
 
 若模型直接输出 mower 类别，设 `requires_remapping: false` 并删除 ADE20K mapping。
 
-## 测试与网页启动（WSL）
+## 打开网页评估（WSL）
 
-在 Ubuntu-22.04 中执行，Windows 协调目录不是代码仓库：
+在 Ubuntu-22.04 终端中只需：
 
 ```bash
 cd /home/watermango/github/mower-perception
-source .venv/bin/activate
-# 若当前终端没有 node/npm，先加载已安装的 Node（例如 nvm use）
-./scripts/test.sh
-```
-
-`test.sh` 依次运行 Python 测试、前端 lint、TypeScript 检查和生产构建；失败即停止。使用已有 `.venv` 和 `node_modules`，不自动安装或降级依赖。首次准备环境参见上面的安装命令（包含 `pip install pytest` 和 `npm ci`）。它不会启动网页，也不会自动执行完整数据评测。
-
-启动交互网页，保持这个终端运行：
-
-```bash
-# CNN 权重已有缓存时会复用；首次需联网下载
-python -m tools.download_mit_weights
 ./scripts/dev.sh
 ```
 
-浏览器打开 http://127.0.0.1:43129，切换模型、选择样例或上传图片；Ctrl+C 停止。已有全部 HF 权重缓存时可使用 `HF_HUB_OFFLINE=1 ./scripts/dev.sh`，减少弱网元数据查询；首次下载不要开启离线模式。
+打开 http://127.0.0.1:43129。网页提供三张演示图、上传图片，以及已下载的 GrassSegHB 标注集：按庭院选图、上一张/下一张，查看原图、标注和两个模型的已保存对比。点击“用当前模型重新推理”可重跑该图，随后切换模型仍保持同一张图。已有评测结果明确标为历史结果；本次推理指标单独显示。
 
-保持网页服务运行，在第二个 WSL 终端执行真实样例和上传接口测试：
+模型自动优先使用本地缓存，缺少文件时才尝试下载，不需要手动设置 HF_HUB_OFFLINE。首次环境安装和 CNN 权重下载见上文及评测文档。数据尚未下载时网页会说明；不自动下载近 1 GB 数据。Ctrl+C 停止服务。
 
-```bash
-cd /home/watermango/github/mower-perception
-.venv/bin/python -m tools.verify_api
-```
+### 开发者验证（日常使用无需执行）
 
-该测试对每个模型执行三张样例和一次上传，结果写入 `outputs/api-validation.json`。API 测试不等于标注准确率评测。
+`./scripts/test.sh` 汇总 Python 测试、lint、类型检查、构建；`python -m tools.verify_api` 在服务运行时验证样例及上传接口。这些是维护代码的工具，不是使用网页前必须执行的步骤。
 
-重跑 GrassSegHB 对比（无需网页服务，建议先停止服务释放显存）：
-
-```bash
-source .venv/bin/activate
-python -m tools.prepare_grassseghb --download --workers 8
-python -m tools.audit_grassseghb
-# 先用 2 张真实标注图快速验证流程
-python -m mowerseg.evaluate --limit 2 --output outputs/smoke
-# 完整 256 张，耗时较长
-python -m mowerseg.evaluate --warmup 5 --threads 4
-```
-
-下载器复用通过校验的已有数据，不下载整个归档。完整结果在 `outputs/grassseghb/results.json`，同图对比与失败案例入口为 `outputs/grassseghb/index.html`。采样、计时口径和许可限制见 [评测文档](docs/evaluation.md)。
+需要重新生成全部标注评测时，参见 [评测流程](docs/evaluation.md)。已有完整结果在 `outputs/grassseghb/`，网页直接读取它们，不会在启动时重复跑 256 张推理。
 
 ## 换自己的数据
 

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import Any
+from mowerseg.models.hf_cache import from_pretrained_cached
 
 import numpy as np
 from PIL import Image
@@ -31,8 +32,8 @@ class SegmentationPreprocessor:
             source = model_config.artifact_for("torch") or model_config.hub_id
             if not source:
                 raise ValueError(f"Model '{model_config.name}' missing hub_id/artifact")
-            self._processor = AutoImageProcessor.from_pretrained(
-                source, revision=model_config.raw.get("revision")
+            self._processor = from_pretrained_cached(
+                AutoImageProcessor, source, revision=model_config.raw.get("revision")
             )
 
     def __call__(self, frame: Frame) -> dict[str, Any]:

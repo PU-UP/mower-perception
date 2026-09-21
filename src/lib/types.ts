@@ -25,6 +25,7 @@ export type ModelCard = {
 }
 
 export type InferResponse = {
+  evaluation?: Record<string, number | null> | null
   overlay: string
   mask: string
   input: string

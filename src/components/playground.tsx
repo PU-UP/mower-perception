@@ -12,6 +12,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import type { InferResponse, ModelCard, TaxonomyResponse } from "@/lib/types"
+import { DatasetBrowser, EvaluationMetrics } from "@/components/dataset-browser"
 import { cn } from "@/lib/utils"
 
 function toHex(color: number[]) {
@@ -48,6 +49,7 @@ export function Playground() {
     const model = selectedModel ?? modelIdRef.current
     setBusy(true)
     setError(null)
+    setResult(null)
     setActiveSample(id)
     lastUploadRef.current = null
     try {
@@ -68,6 +70,7 @@ export function Playground() {
     const model = selectedModel ?? modelIdRef.current
     setBusy(true)
     setError(null)
+    setResult(null)
     setActiveSample("upload")
     lastUploadRef.current = file
     try {
@@ -163,6 +166,8 @@ export function Playground() {
           <Badge variant="secondary">板端学生网起点</Badge>
         </div>
       </header>
+
+      <DatasetBrowser busy={busy} onRun={(id) => runSample(`grass-${id}`)} />
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(280px,0.8fr)]">
         <Card className="overflow-hidden">
@@ -291,6 +296,11 @@ export function Playground() {
                 </p>
               </div>
             ) : null}
+
+            {result?.evaluation ? (
+              <div className="mt-4"><p className="mb-2 text-sm">本次推理与人工标注比较</p><EvaluationMetrics metrics={result.evaluation} /></div>
+            ) : null}
+            {activeSample.startsWith("grass-") ? <p className="mt-2 text-xs text-muted-foreground">评测样本：{activeSample.slice(6)}；切换模型保持同一张图。VOC 无草地类别，不计算可割指标。</p> : null}
 
             {error ? (
               <p className="mt-3 text-sm text-destructive">{error}</p>
