@@ -21,10 +21,15 @@ def test_metrics_exact_counts_and_undefined():
     assert [c[k] for k in ('tp', 'fp', 'tn', 'fn')] == [1, 1, 1, 1]
     m = metrics(c)
     assert m['mowable_iou'] == 1/3
+    assert m['mowable_false_negative_rate'] == .5
     assert m['nonmowable_false_positive_rate'] == .5
     assert m['predicted_mowable_error_fraction'] == .5
     empty = metrics(counts(np.zeros((4, 4)), np.zeros((4, 4))))
     assert empty['mowable_iou'] is None
+    assert empty['mowable_false_negative_rate'] is None
+    missed = metrics(counts(np.zeros((2, 2)), np.ones((2, 2))))
+    assert missed['mowable_false_negative_rate'] == 1
+    assert missed['mowable_iou'] == 0
     assert empty['nonmowable_false_positive_rate'] == 0
     assert empty['boundary_f1'] is None
     with pytest.raises(ValueError, match='0/1'):
