@@ -99,3 +99,20 @@ def test_mit_refuses_missing_or_incomplete_checkpoints(tmp_path):
     (tmp_path/'encoder_epoch_20.pth').write_bytes(b'not a segmentation checkpoint')
     with pytest.raises(ValueError, match='SHA-256'):
         load_mit_resnet18(tmp_path)
+
+
+def test_hf_ade_annotation_ignore_is_explicit():
+    from transformers import AutoImageProcessor
+    processor = AutoImageProcessor.from_pretrained(
+        "nvidia/segformer-b0-finetuned-ade-512-512",
+        revision="489d5cd81a0b59fab9b7ea758d3548ebe99677da",
+    )
+    labels = np.array([[0, 1], [10, 150]], dtype=np.uint8)
+    packed = processor(images=Image.new("RGB", (2, 2)), segmentation_maps=labels,
+                       do_resize=False, do_reduce_labels=True, return_tensors="np")
+    assert packed['labels'][0].tolist() == [[255, 0], [9, 149]]
+    # Binary mowable labels are already zero-based and must never be reduced.
+    binary = np.array([[0, 1], [1, 0]], dtype=np.uint8)
+    kept = processor(images=Image.new("RGB", (2, 2)), segmentation_maps=binary,
+                     do_resize=False, do_reduce_labels=False, return_tensors="np")
+    np.testing.assert_array_equal(kept['labels'][0], binary)

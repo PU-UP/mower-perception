@@ -45,7 +45,7 @@ with PerceptionEngine(model="mit_resnet18_ade20k", config_path="configs/mower_se
 
 ## 标签语义
 
-仓库附带上游 `data/object150_info.csv` 的原始类别表。ADE20K 标注 id 0 为未标注，1..150 是有效类别；训练减 1 后为 -1（ignore）和 0..149。模型输出已经是 0..149，**不得再次减 1**。grass 的官方表 id=10，对应输出 index=9；输出 0 是 wall，不是 ignore。
+仓库附带上游 `data/object150_info.csv` 的原始类别表。ADE20K 标注 id 0 为未标注，1..150 是有效类别；训练减 1 后为 -1（ignore）和 0..149。HF 训练标注转换则用 255 表示 ignore；测试显式验证 `[0,1,10,150] → [255,0,9,149]`。当前 Transformers 对旧 checkpoint 的 `reduce_labels: true` 不会自动启用 `do_reduce_labels`；若未来传入 ADE20K segmentation_maps，必须显式设置 `do_reduce_labels=True`。本次仅传图片，不触发标签转换。模型输出已经是 0..149，**不得再次减 1**。grass 的官方表 id=10，对应输出 index=9；输出 0 是 wall，不是 ignore。
 
 产品映射只把输出 9 映射到产品 grass=1。tree/plant 等 vegetation 和 terrain 不并入可割。未列出的模型类别保守映射 obstacle；255 并不是模型的有效类别，不能作为可割。评测直接取 `raw_mask == 9`，并断言它与产品 grass 映射一致。
 
