@@ -1,6 +1,6 @@
 # ADE20K CNN 与 SegFormer-B0 的割草场景初评
 
-后续 LR-ASPP 真实训练请求目前因图像/标注训练授权未确认而阻塞，见 [训练状态与核查证据](../evaluation/LRASPP-TRAINING-STATUS.md)。旧报告的“不能声称商用”不代表已确认研究训练授权。
+后续已完成 **YCOR 可通行草地代理模型** 的真实 LR-ASPP 训练与 B0 对比，见 [新报告与复现命令](../evaluation/ycor/REPORT.md)。真实可割适配尚未完成；GrassSegHB 许可待解决，见 [状态与历史核查](../evaluation/LRASPP-TRAINING-STATUS.md)。下文及旧报告保留历史结果。
 
 本流程无需训练，比较的是现成 ADE20K 模型的 **grass 可割代理预测**。它不是安全可通行判定，也不验证人、动物或小障碍物的完整检测能力。不要用像素占比、置信度或演示图片替代标注评测。
 

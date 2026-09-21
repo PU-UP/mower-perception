@@ -1,0 +1,8 @@
+/home/watermango/github/mower-perception/.venv/lib/python3.10/site-packages/torch/nn/functional.py:3561: UserWarning: nll_loss2d_forward_out_cuda_template does not have a deterministic implementation, but you set 'torch.use_deterministic_algorithms(True, warn_only=True)'. You can file an issue at https://github.com/pytorch/pytorch/issues to help us prioritize adding deterministic support for this operation. (Triggered internally at /__w/pytorch/pytorch/aten/src/ATen/Context.cpp:186.)
+  return torch._C._nn.cross_entropy_loss(
+{"step": 20, "train_loss": 0.03258582577109337, "loss": 3.5500105373942565, "iou": 0.3833406384688436, "counts": {"tp": 209902, "fp": 337653, "fn": 5, "tn": 230621}}
+{"step": 40, "train_loss": 0.03454805538058281, "loss": 0.7251290991427444, "iou": 0.6353188330350514, "counts": {"tp": 206248, "fp": 114730, "fn": 3659, "tn": 453544}}
+{"step": 60, "train_loss": 0.021055836230516434, "loss": 0.2390177381611733, "iou": 0.7922766379358019, "counts": {"tp": 200568, "fp": 43247, "fn": 9339, "tn": 525027}}
+{"step": 80, "train_loss": 0.01863250508904457, "loss": 0.09287327594736958, "iou": 0.8766744562617304, "counts": {"tp": 190575, "fp": 7477, "fn": 19332, "tn": 560797}}
+{"step": 100, "train_loss": 0.0172103401273489, "loss": 0.07701886976648106, "iou": 0.9027350347157065, "counts": {"tp": 192427, "fp": 3253, "fn": 17480, "tn": 565021}}
+{"step": 120, "train_loss": 0.017024191096425056, "loss": 0.04334136876574987, "iou": 0.9392871758446971, "counts": {"tp": 199684, "fp": 2684, "fn": 10223, "tn": 565590}}

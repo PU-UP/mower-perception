@@ -1,0 +1,87 @@
+[
+  {
+    "path": "/home/watermango/github/mower-perception-lraspp/runs/ycor-lraspp-20260921/best.pt",
+    "bytes": 13071410,
+    "sha256": "3fa39de55d0c1dd2a7debce5038703201740e3daa26e9e3f4b6a2f1dacede901"
+  },
+  {
+    "path": "/home/watermango/github/mower-perception-lraspp/data/ycor/official-package.tar.gz",
+    "bytes": 155266239,
+    "sha256": "2a18c82e05aee66bb49480d3a74fcc73ba0129418b7b26a4a7d4a57e67c5cbe2"
+  },
+  {
+    "path": "/home/watermango/github/mower-perception-lraspp/outputs/ycor-new-image-fp32.png",
+    "bytes": 3668,
+    "sha256": "de961434edb955e7cdfefe7d73f0d66713d26f8273a38391030b995e12db0da0"
+  },
+  {
+    "path": "/home/watermango/github/mower-perception-lraspp/outputs/ycor-final-20260921/iid000843-failure.jpg",
+    "bytes": 73225,
+    "sha256": "1e65ed3af51b2a0086dd6e94195d9e21cdeca039c7987633450c86a59ce65498"
+  },
+  {
+    "path": "/home/watermango/github/mower-perception-lraspp/outputs/ycor-final-20260921/iid000848-failure.jpg",
+    "bytes": 91112,
+    "sha256": "6e8dcf89f97fd88ca9c81834213344efb58ee1ff0c86e626f019ff8130f72897"
+  },
+  {
+    "path": "/home/watermango/github/mower-perception-lraspp/outputs/ycor-final-20260921/iid000850-failure.jpg",
+    "bytes": 107361,
+    "sha256": "5b9395d80b8f019ee1f468a9ce1e31038161d6eb6adcdeb40f35d9b578fd259a"
+  },
+  {
+    "path": "/home/watermango/github/mower-perception-lraspp/outputs/ycor-final-20260921/iid000856-failure.jpg",
+    "bytes": 81997,
+    "sha256": "313da9143a5588b249c84121926617bcc780e7b335c41d7596a87141964b88f9"
+  },
+  {
+    "path": "/home/watermango/github/mower-perception-lraspp/outputs/ycor-final-20260921/iid000857-failure.jpg",
+    "bytes": 86811,
+    "sha256": "c66af7befb490856ac3729f4e80bd3669e4ea1e372ebfff0953b932988713b8d"
+  },
+  {
+    "path": "/home/watermango/github/mower-perception-lraspp/outputs/ycor-final-20260921/iid000878-failure.jpg",
+    "bytes": 73854,
+    "sha256": "cc86168cdb4de2b2831ce6dfaec4dd875f91cecabdf4ea5b846073539e1133a0"
+  },
+  {
+    "path": "/home/watermango/github/mower-perception-lraspp/outputs/ycor-final-20260921/iid000879-failure.jpg",
+    "bytes": 76355,
+    "sha256": "f94aa0d31ff1becf88bcc692c92e46cafcc13180c577fa8c43e5e0f8eb927d60"
+  },
+  {
+    "path": "/home/watermango/github/mower-perception-lraspp/outputs/ycor-final-20260921/iid000916-failure.jpg",
+    "bytes": 86131,
+    "sha256": "13cbe985c77b39c0feeb1d5320e93b81023e7b0aedbab78565a3816f9450fbf7"
+  },
+  {
+    "path": "/home/watermango/github/mower-perception-lraspp/outputs/ycor-final-20260921/iid000918-failure.jpg",
+    "bytes": 87170,
+    "sha256": "9114b5aec964d9ca4b400ccc62ced4de697d0747b71c98a572749c0c677a492f"
+  },
+  {
+    "path": "/home/watermango/github/mower-perception-lraspp/outputs/ycor-final-20260921/iid000919-failure.jpg",
+    "bytes": 79949,
+    "sha256": "c1de320d97001b756dee929032cb0018c66b67aa2e325311c7698c663b2a226b"
+  },
+  {
+    "path": "/home/watermango/github/mower-perception-lraspp/outputs/ycor-final-20260921/iid000982-failure.jpg",
+    "bytes": 81269,
+    "sha256": "f76cbb6f8b5c6f8e1befc78d51ac54754a22cd3d8a8f9ee2284dbdc1fb710561"
+  },
+  {
+    "path": "/home/watermango/github/mower-perception-lraspp/outputs/ycor-final-20260921/iid001019-failure.jpg",
+    "bytes": 90909,
+    "sha256": "2acc1d20a60352bebe4391588f9cf38264debc0fdc7c972ec16f744849f6d463"
+  },
+  {
+    "path": "/home/watermango/github/mower-perception-lraspp/outputs/ycor-final-20260921/iid001023-failure.jpg",
+    "bytes": 60530,
+    "sha256": "0a8d190a8db82aa82181a85b2df81aa5ea4b1b0bfb3910a0fa49a4f5bd74dc44"
+  },
+  {
+    "path": "/home/watermango/github/mower-perception-lraspp/outputs/ycor-final-20260921/iid001039-failure.jpg",
+    "bytes": 84197,
+    "sha256": "89d11dbc21b459744d0010ff11b49947b0fd4cd180533969bc8973c361b972cf"
+  }
+]
