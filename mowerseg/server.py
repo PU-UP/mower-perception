@@ -84,6 +84,7 @@ def _run(image: Image.Image, *, model: str | None = None, truth=None) -> dict:
         evaluation = metrics(counts(result.ade_mask == 9, truth))
     return {
         "evaluation": evaluation,
+        "evaluation_protocol": {"boundary_radius_pixels": 3} if evaluation is not None else None,
         "overlay": _to_data_url(preview_overlay, "jpeg"),
         "mask": _to_data_url(preview_mask, "png"),
         "input": _to_data_url(preview_input, "jpeg"),
@@ -236,6 +237,16 @@ def grass_report():
     report = json.loads(path.read_text())
     if not report.get("complete") or report.get("manifest_sha256") != hashlib.sha256(manifest.read_bytes()).hexdigest():
         return None
+    expected = {s["image"]: s for s in json.loads(manifest.read_text())["samples"]}
+    if not expected or report.get("sample_count") != len(expected) or not report.get("models"):
+        return None
+    for model in report["models"].values():
+        rows = model.get("samples", [])
+        if len(rows) != len(expected) or {r["image"] for r in rows} != set(expected):
+            return None
+        if any(any(r.get(key) != expected[r["image"]].get(key)
+                   for key in ("garden", "mask", "image_sha256", "mask_sha256")) for r in rows):
+            return None
     return report
 
 
@@ -269,7 +280,8 @@ def grass_detail(sample_id: str):
                                 "image": f"/api/grass/{sample_id}/comparison/{model}"})
     return {"id": sample_id, "input": _to_data_url(preview, "jpeg"),
             "truth": _to_data_url(label), "comparisons": comparisons,
-            "revision": (report or {}).get("code_revision")}
+            "revision": (report or {}).get("code_revision"),
+            "protocol": (report or {}).get("protocol")}
 
 
 @app.get("/api/grass/{sample_id}/comparison/{model}")
@@ -291,11 +303,13 @@ def grass_summary():
         return {"available": False}
     return {
         "available": True, "sample_count": report["sample_count"],
-        "garden_count": len({s["garden"] for s in grass_manifest()["samples"]}),
+        "garden_count": len({s["garden"] for m in report["models"].values() for s in m["samples"]}),
         "revision": report["code_revision"], "hardware": report["hardware"],
         "protocol": report["protocol"],
         "models": [{"id": key, "name": value["config"]["display_name"],
                     "metrics": value["metrics"], "model_latency": value["model_latency"],
-                    "end_to_end_latency": value["end_to_end_latency"]}
+                    "end_to_end_latency": value["end_to_end_latency"],
+                    "input_shapes": sorted({tuple(s["input_shape"][2:]) for s in value["samples"]}),
+                    "original_sizes": sorted({tuple(s["original_size"]) for s in value["samples"]})}
                    for key, value in report["models"].items()],
     }

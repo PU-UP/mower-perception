@@ -80,7 +80,7 @@ python -m tools.prepare_grassseghb --download --workers 8
 ```bash
 python -m tools.audit_grassseghb
 python -m mowerseg.evaluate --warmup 5 --threads 4
-# 先做少量真实数据冒烟；报告明确记录 reduced sample count
+# 先做少量真实数据冒烟；必须指定独立输出，禁止覆盖默认完整报告
 python -m mowerseg.evaluate --limit 2 --output outputs/smoke
 # 可反转顺序重测，检查散热/负载影响
 python -m mowerseg.evaluate --models mit_resnet18_ade20k segformer_b0_ade20k --output outputs/reverse
@@ -115,3 +115,5 @@ python -m tools.verify_mit_runtime --source .cache/sources/mit
 ```
 
 具体实测、人工标注检查和是否值得小规模微调的结论见 `evaluation/REPORT.md`。公开榜单不替代此报告。此次不训练、不接自动驾驶控制、不创建自动审查任务。
+
+网页只接受每个模型逐图清单与冻结 manifest 完全一致的完整报告（包含分组、标注和文件摘要）；部分试跑不会作为总体成绩展示。庭院数、输入尺寸及边界容差来自实际报告。单图实时推理的边界容差另行显示，当前为 3 像素。

@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 type Sample = { id: string; garden: string }
 type Detail = {
   id: string; input: string; truth: string; revision: string | null
+  protocol: { boundary_radius_pixels?: number } | null
   comparisons: { model: string; name: string; image: string; metrics: Record<string, number | null> }[]
 }
 
@@ -21,8 +22,9 @@ export function EvaluationMetrics({ metrics }: { metrics: Record<string, number 
 type Summary = {
   available: boolean; sample_count: number; garden_count: number; revision: string
   hardware: { gpu: string }
-  protocol: { warmup: number; batch_size: number }
+  protocol: { warmup: number; batch_size: number; boundary_radius_pixels?: number; precision?: string }
   models: { id: string; name: string; metrics: Record<string, number | null>;
+    input_shapes: number[][]; original_sizes: number[][];
     model_latency: { median_ms: number }; end_to_end_latency: { median_ms: number } }[]
 }
 
@@ -88,8 +90,8 @@ export function DatasetBrowser({ busy, onRun }: { busy: boolean; onRun: (id: str
               </tbody>
             </table>
           </div>
-          <p className="text-xs leading-6 text-muted-foreground">↑ 越高越好，↓ 越低越好。IoU 衡量预测与标注的重合程度；误割率衡量把不可割区域当成草地的比例。总体指标按全体像素累计，不是下面某一张图的分数；庭院筛选只影响样本浏览。边界匹配容差为原图 3 像素，不合成为单一总分。</p>
-          <details className="text-xs text-muted-foreground"><summary className="cursor-pointer">查看速度测量条件</summary><p className="mt-2 leading-6">设备：{summary.hardware.gpu}；每模型预热 {summary.protocol.warmup} 次，批量 {summary.protocol.batch_size}。原图 4000×3000；B0 输入 512×512，CNN 输入 600×800，各遵循官方预处理。模型时间仅含前向计算；端到端包含解码、预处理和原尺寸输出还原，不含下载或浏览器。历史版本：{summary.revision.slice(0, 7)}。</p></details>
+          <p className="text-xs leading-6 text-muted-foreground">↑ 越高越好，↓ 越低越好。IoU 衡量预测与标注的重合程度；误割率衡量把不可割区域当成草地的比例。总体指标按全体像素累计，不是下面某一张图的分数；庭院筛选只影响样本浏览。边界匹配容差为原图 {summary.protocol.boundary_radius_pixels ?? "未记录"} 像素，不合成为单一总分。</p>
+          <details className="text-xs text-muted-foreground"><summary className="cursor-pointer">查看速度测量条件</summary><p className="mt-2 leading-6">设备：{summary.hardware.gpu}；每模型预热 {summary.protocol.warmup} 次，批量 {summary.protocol.batch_size}。精度：{summary.protocol.precision ?? "未记录"}。{summary.models.map(m => `${m.name}：原图（宽×高）${m.original_sizes.map(s => s.join("×")).join("、")}；输入（高×宽）${m.input_shapes.map(s => s.join("×")).join("、")}`).join("；")}。各遵循官方预处理。模型时间仅含前向计算；端到端包含解码、预处理和原尺寸输出还原，不含下载或浏览器。历史版本：{summary.revision.slice(0, 7)}。</p></details>
         </> : <p className="text-sm">{summaryError ? "总体结果暂时无法读取，请刷新重试。" : summary ? "尚无与当前样本清单匹配的完整评测结果。" : "正在读取总体评测结果…"}</p>}
       </CardContent>
     </Card>
@@ -117,7 +119,7 @@ export function DatasetBrowser({ busy, onRun }: { busy: boolean; onRun: (id: str
             <img src={src} alt={`${selected} ${title}`} className="h-auto w-full rounded-lg" />
             <figcaption className="mt-1 text-sm">{title}</figcaption>
           </figure>)}</div>
-          <p className="text-xs text-muted-foreground">以下为已保存的离线评测（版本 {current.revision?.slice(0, 7) ?? "—"}），仅对应当前选中的图片。逐图指标按原始标注计算，边界容差 3 像素。</p>
+          <p className="text-xs text-muted-foreground">以下为已保存的离线评测（版本 {current.revision?.slice(0, 7) ?? "—"}），仅对应当前选中的图片。逐图指标按原始标注计算，边界容差 {current.protocol?.boundary_radius_pixels ?? "未记录"} 像素。</p>
           {current.comparisons.length ? current.comparisons.map(c => <div key={c.model} className="grid gap-2 rounded-lg border p-3">
             <h3 className="text-sm font-medium">{c.name.replace(" (ADE20K)", "")}</h3>
             <p className="text-xs text-muted-foreground">训练数据：ADE20K · 当前评测数据：GrassSegHB</p>

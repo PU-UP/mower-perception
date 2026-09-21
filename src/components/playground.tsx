@@ -305,7 +305,7 @@ export function Playground() {
             ) : null}
 
             {result?.evaluation ? (
-              <div className="mt-4"><p className="mb-2 text-sm">本次推理与人工标注比较</p><EvaluationMetrics metrics={result.evaluation} /></div>
+              <div className="mt-4"><p className="mb-2 text-sm">本次推理与人工标注比较（边界容差 {result.evaluation_protocol?.boundary_radius_pixels ?? "未记录"} 像素）</p><EvaluationMetrics metrics={result.evaluation} /></div>
             ) : null}
             {activeSample.startsWith("grass-") ? <p className="mt-2 text-xs text-muted-foreground">评测样本：{activeSample.slice(6)}；切换模型保持同一张图。VOC 无草地类别，不计算可割指标。</p> : null}
 

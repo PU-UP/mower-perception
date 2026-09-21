@@ -125,6 +125,13 @@ def save_comparison(path, image, truth, pred, title):
 
 
 def run(args):
+    if args.limit and args.output.resolve() == Path("outputs/grassseghb").resolve():
+        raise ValueError("--limit requires a separate --output (for example outputs/smoke); refusing to overwrite the full report")
+    existing = args.output / "results.json"
+    if args.limit and existing.exists():
+        previous = json.loads(existing.read_text())
+        if previous.get("sample_count", 0) > args.limit:
+            raise ValueError("Smoke run would overwrite a larger report; choose a new --output")
     manifest_bytes = args.manifest.read_bytes()
     manifest = json.loads(manifest_bytes)
     if not manifest.get("download_complete") or not manifest.get("samples"):
