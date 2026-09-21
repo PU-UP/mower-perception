@@ -282,3 +282,20 @@ def grass_comparison(sample_id: str, model: str):
     if not path.is_file():
         raise HTTPException(status_code=404, detail="本地对比图尚未生成")
     return FileResponse(path, media_type="image/jpeg")
+
+
+@app.get("/api/grass-summary")
+def grass_summary():
+    report = grass_report()
+    if report is None:
+        return {"available": False}
+    return {
+        "available": True, "sample_count": report["sample_count"],
+        "garden_count": len({s["garden"] for s in grass_manifest()["samples"]}),
+        "revision": report["code_revision"], "hardware": report["hardware"],
+        "protocol": report["protocol"],
+        "models": [{"id": key, "name": value["config"]["display_name"],
+                    "metrics": value["metrics"], "model_latency": value["model_latency"],
+                    "end_to_end_latency": value["end_to_end_latency"]}
+                   for key, value in report["models"].items()],
+    }

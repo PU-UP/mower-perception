@@ -18,7 +18,21 @@ export function EvaluationMetrics({ metrics }: { metrics: Record<string, number 
   </dl>
 }
 
+type Summary = {
+  available: boolean; sample_count: number; garden_count: number; revision: string
+  hardware: { gpu: string }
+  protocol: { warmup: number; batch_size: number }
+  models: { id: string; name: string; metrics: Record<string, number | null>;
+    model_latency: { median_ms: number }; end_to_end_latency: { median_ms: number } }[]
+}
+
+function score(value: number | null | undefined) {
+  return value == null ? "无定义" : `${(value * 100).toFixed(2)}%`
+}
+
 export function DatasetBrowser({ busy, onRun }: { busy: boolean; onRun: (id: string) => void }) {
+  const [summary, setSummary] = useState<Summary | null>(null)
+  const [summaryError, setSummaryError] = useState(false)
   const [samples, setSamples] = useState<Sample[]>([])
   const [total, setTotal] = useState<number | null>(null)
   const [garden, setGarden] = useState("all")
@@ -27,6 +41,10 @@ export function DatasetBrowser({ busy, onRun }: { busy: boolean; onRun: (id: str
   const [error, setError] = useState("")
   useEffect(() => {
     const controller = new AbortController()
+    fetch("/api/grass-summary", { signal: controller.signal }).then(async res => {
+      if (!res.ok) throw new Error("summary")
+      setSummary(await res.json())
+    }).catch(() => { if (!controller.signal.aborted) setSummaryError(true) })
     fetch("/api/grass", { signal: controller.signal }).then(async res => {
       if (!res.ok) throw new Error("无法读取评测集")
       const data = await res.json()
@@ -49,9 +67,35 @@ export function DatasetBrowser({ busy, onRun }: { busy: boolean; onRun: (id: str
   const index = filtered.findIndex(s => s.id === selected)
   const current = detail?.id === selected ? detail : null
   const selectClass = "rounded-md border bg-background px-3 py-2 text-sm"
-  return <Card>
+  return <div className="grid gap-6">
+    <Card>
+      <CardHeader>
+        <CardTitle>总体表现</CardTitle>
+        <CardDescription>评测数据：GrassSegHB（割草视角的庭院图片与人工标注）。比较同一批图片上识别草地的能力。</CardDescription>
+      </CardHeader>
+      <CardContent className="grid gap-4">
+        <p className="text-sm leading-6"><strong>训练数据 ≠ 评测数据。</strong> ADE20K 是模型此前学习的通用场景数据集，包含草地等 150 类；下列两个模型都用它训练。本次用 GrassSegHB 检查它们能否适应割草场景，没有进行割草场景微调。</p>
+        {summary?.available ? <>
+          <p className="text-sm">{summary.sample_count} 张标注图片 · {summary.garden_count} 个庭院分组 · 已完成的离线评测</p>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[560px] text-left text-sm">
+              <caption className="sr-only">两模型在完整评测子集上的总体指标</caption>
+              <thead><tr className="border-b"><th scope="col" className="py-3 pr-4">指标</th>{summary.models.map(m => <th scope="col" className="px-3 py-3" key={m.id}>{m.name.replace(" (ADE20K)", "")}<span className="mt-1 block text-xs font-normal text-muted-foreground">训练数据：ADE20K</span></th>)}</tr></thead>
+              <tbody>
+                {[["mowable_iou", "可割区域 IoU ↑"], ["nonmowable_false_positive_rate", "不可割误判为可割 ↓"], ["predicted_mowable_error_fraction", "预测可割中的错误比例 ↓"], ["boundary_f1", "边界 F1 ↑"]].map(([key, label]) => <tr key={key} className="border-b"><th scope="row" className="py-3 pr-4 font-normal">{label}</th>{summary.models.map(m => <td className="px-3 py-3 tabular-nums" key={m.id}>{score(m.metrics[key])}</td>)}</tr>)}
+                <tr className="border-b"><th scope="row" className="py-3 pr-4 font-normal">模型推理中位数 ↓</th>{summary.models.map(m => <td className="px-3 py-3 tabular-nums" key={m.id}>{m.model_latency.median_ms.toFixed(2)} ms</td>)}</tr>
+                <tr><th scope="row" className="py-3 pr-4 font-normal">端到端处理中位数 ↓</th>{summary.models.map(m => <td className="px-3 py-3 tabular-nums" key={m.id}>{m.end_to_end_latency.median_ms.toFixed(2)} ms</td>)}</tr>
+              </tbody>
+            </table>
+          </div>
+          <p className="text-xs leading-6 text-muted-foreground">↑ 越高越好，↓ 越低越好。IoU 衡量预测与标注的重合程度；误割率衡量把不可割区域当成草地的比例。总体指标按全体像素累计，不是下面某一张图的分数；庭院筛选只影响样本浏览。边界匹配容差为原图 3 像素，不合成为单一总分。</p>
+          <details className="text-xs text-muted-foreground"><summary className="cursor-pointer">查看速度测量条件</summary><p className="mt-2 leading-6">设备：{summary.hardware.gpu}；每模型预热 {summary.protocol.warmup} 次，批量 {summary.protocol.batch_size}。原图 4000×3000；B0 输入 512×512，CNN 输入 600×800，各遵循官方预处理。模型时间仅含前向计算；端到端包含解码、预处理和原尺寸输出还原，不含下载或浏览器。历史版本：{summary.revision.slice(0, 7)}。</p></details>
+        </> : <p className="text-sm">{summaryError ? "总体结果暂时无法读取，请刷新重试。" : summary ? "尚无与当前样本清单匹配的完整评测结果。" : "正在读取总体评测结果…"}</p>}
+      </CardContent>
+    </Card>
+    <Card>
     <CardHeader>
-      <CardTitle>GrassSegHB 标注评测集</CardTitle>
+      <CardTitle>逐图查看</CardTitle>
       <CardDescription>已下载 {samples.length} / {total ?? "…"} 张 · 真实人工标注。白色=可割，黑色=不可割；grass 预测仅作可割代理。</CardDescription>
     </CardHeader>
     <CardContent className="grid gap-4">
@@ -65,7 +109,7 @@ export function DatasetBrowser({ busy, onRun }: { busy: boolean; onRun: (id: str
           <Button size="sm" variant="outline" disabled={busy || index <= 0} onClick={() => setSelected(filtered[index - 1].id)}>上一张</Button>
           <Button size="sm" variant="outline" disabled={busy || index >= filtered.length - 1} onClick={() => setSelected(filtered[index + 1].id)}>下一张</Button>
           <span className="text-xs text-muted-foreground">{index + 1} / {filtered.length}</span>
-          <Button size="sm" disabled={busy || !current || !!error} onClick={() => onRun(selected)}>用当前模型重新推理</Button>
+          <Button size="sm" disabled={busy || !current || !!error} onClick={() => onRun(selected)}>在单图试验中打开</Button>
         </div>
         {current ? <>
           <div className="grid gap-4 sm:grid-cols-2">{[[current.input, "原图"], [current.truth, "人工标注"]].map(([src, title]) => <figure key={title}>
@@ -73,9 +117,10 @@ export function DatasetBrowser({ busy, onRun }: { busy: boolean; onRun: (id: str
             <img src={src} alt={`${selected} ${title}`} className="h-auto w-full rounded-lg" />
             <figcaption className="mt-1 text-sm">{title}</figcaption>
           </figure>)}</div>
-          <p className="text-xs text-muted-foreground">以下为已保存的离线评测（版本 {current.revision?.slice(0, 7) ?? "—"}），不会随当前模型按钮变化。逐图指标按原始标注计算，边界容差 3 像素。</p>
+          <p className="text-xs text-muted-foreground">以下为已保存的离线评测（版本 {current.revision?.slice(0, 7) ?? "—"}），仅对应当前选中的图片。逐图指标按原始标注计算，边界容差 3 像素。</p>
           {current.comparisons.length ? current.comparisons.map(c => <div key={c.model} className="grid gap-2 rounded-lg border p-3">
-            <h3 className="text-sm font-medium">{c.name}</h3>
+            <h3 className="text-sm font-medium">{c.name.replace(" (ADE20K)", "")}</h3>
+            <p className="text-xs text-muted-foreground">训练数据：ADE20K · 当前评测数据：GrassSegHB</p>
             <EvaluationMetrics metrics={c.metrics} />
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img loading="lazy" src={c.image} alt={`${c.name}：原图、标注、预测、错误对比`} className="h-auto w-full" />
@@ -86,4 +131,5 @@ export function DatasetBrowser({ busy, onRun }: { busy: boolean; onRun: (id: str
       {error ? <p role="alert" className="text-sm text-destructive">{error}</p> : null}
     </CardContent>
   </Card>
+  </div>
 }

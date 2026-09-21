@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Leaf, LoaderCircle, ShieldAlert, Upload } from "lucide-react"
-import { Badge } from "@/components/ui/badge"
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -29,6 +29,7 @@ function withModel(url: string, modelId: string) {
 }
 
 export function Playground() {
+  const [mode, setMode] = useState("dataset")
   const inputRef = useRef<HTMLInputElement>(null)
   const lastUploadRef = useRef<File | null>(null)
   const modelIdRef = useRef("segformer_b0_ade20k")
@@ -153,22 +154,28 @@ export function Playground() {
             MowerSeg Factory
           </p>
           <h1 className="font-heading text-3xl font-semibold tracking-tight text-ink sm:text-4xl">
-            割草机可通行语义分割
+            割草场景分割评估
           </h1>
           <p className="mt-3 text-sm leading-7 text-muted-foreground sm:text-base">
-            在同一产品类别契约下手动切换模型对比效果。当前支持 ADE20K /
-            PASCAL VOC 预训练映射。ADE20K 的 grass 仅是“可割”的代理预测，不代表可安全通行。
+            用标注数据集比较模型的整体表现，或选择一张图片试验分割效果。草地识别仅作可割代理，不代表可安全通行。
           </p>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <Badge variant="outline">闭集 9 类</Badge>
-          <Badge variant="outline">可切换模型</Badge>
-          <Badge variant="secondary">板端学生网起点</Badge>
-        </div>
+
       </header>
 
-      <DatasetBrowser busy={busy} onRun={(id) => runSample(`grass-${id}`)} />
-
+      <Tabs value={mode} onValueChange={(value) => setMode(String(value))} className="gap-6">
+        <TabsList aria-label="评估方式" className="w-full sm:w-fit">
+          <TabsTrigger value="dataset" className="px-4">数据集横向对比</TabsTrigger>
+          <TabsTrigger value="single" className="px-4">单图试验</TabsTrigger>
+        </TabsList>
+        <TabsContent value="dataset" keepMounted>
+          <DatasetBrowser busy={busy} onRun={(id) => {
+            setMode("single")
+            void runSample(`grass-${id}`)
+          }} />
+        </TabsContent>
+        <TabsContent value="single" keepMounted>
+          <p className="mb-4 text-sm text-muted-foreground">选择样例或上传自己的图片，再切换模型比较。没有人工标注的图片只展示分割效果，不计算准确率。</p>
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(280px,0.8fr)]">
         <Card className="overflow-hidden">
           <CardHeader className="border-b">
@@ -313,7 +320,7 @@ export function Playground() {
             <CardHeader>
               <CardTitle>当前模型</CardTitle>
               <CardDescription>
-                逻辑模型与源数据集 taxonomy，切换后会重新推理当前样例。
+                切换模型会重新推理当前图片；训练数据表示模型此前学习的图片来源。
               </CardDescription>
             </CardHeader>
             <CardContent className="grid gap-2 text-sm">
@@ -339,8 +346,8 @@ export function Playground() {
               </div>
               <p className="text-xs leading-5 text-muted-foreground">
                 {activeModel?.output_taxonomy === "pascal_voc"
-                  ? "VOC 无草地类别，不能用于判断 CNN 的割草分割能力。"
-                  : "仅将 grass 映射为可割代理；植被与裸地不算可割。二分类评测不验证人、动物或小障碍物检测能力。"}
+                  ? "PASCAL VOC 是模型训练所用的数据集，其中没有草地类别，不能用于比较可割草地识别能力。"
+                  : "ADE20K 是模型训练所用的通用场景分割数据集，包含草地等 150 类。它不是模型名，也不是这次的割草评测集。这里只把其中的 grass（草地）作为可割代理。"}
               </p>
               {result?.stats.input_shape ? (
                 <p className="text-xs text-muted-foreground">
@@ -354,7 +361,7 @@ export function Playground() {
             <CardHeader>
               <CardTitle>产品类别</CardTitle>
               <CardDescription>
-                配置在 <code>configs/mower_seg.yaml</code>，换数据时先改这里。
+                模型输出统一显示为以下类别；草地不等于安全通行。
               </CardDescription>
             </CardHeader>
             <CardContent className="grid gap-2">
@@ -431,6 +438,8 @@ export function Playground() {
           </Card>
         </div>
       </div>
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }

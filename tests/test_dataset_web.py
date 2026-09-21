@@ -52,3 +52,20 @@ def test_cache_first_and_missing_cache_network_fallback():
     Factory.missing = True
     from_pretrained_cached(Factory, "model", revision="fixed")
     assert Factory.calls == [{"local_files_only": True, "revision": "fixed"}, {"revision": "fixed"}]
+
+
+def test_summary_uses_aggregate_metrics_not_one_image(monkeypatch):
+    aggregate = {"mowable_iou": 0.8}
+    report = {"sample_count": 256, "code_revision": "fixed", "hardware": {}, "protocol": {},
+              "models": {"model": {"config": {"display_name": "Model"}, "metrics": aggregate,
+                                   "model_latency": {"median_ms": 10},
+                                   "end_to_end_latency": {"median_ms": 20},
+                                   "samples": [{"metrics": {"mowable_iou": 0.1}}]}}}
+    monkeypatch.setattr(server, "grass_report", lambda: report)
+    monkeypatch.setattr(server, "grass_manifest", lambda: {"samples": [{"garden": "1"}, {"garden": "2"}]})
+    result = server.grass_summary()
+    assert result["sample_count"] == 256 and result["garden_count"] == 2
+    assert result["models"][0]["metrics"] == aggregate
+    assert "samples" not in result["models"][0]
+    monkeypatch.setattr(server, "grass_report", lambda: None)
+    assert server.grass_summary() == {"available": False}
