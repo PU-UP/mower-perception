@@ -85,6 +85,8 @@ class SemanticSegmentationTask(PerceptionTask):
             overlay=views["overlay"],
             class_stats=views["class_stats"],
             metadata={
+                "input_shape": list(inputs["pixel_values"].shape),
+                "preprocess": self.model_config.preprocess,
                 "hub_id": self.model_config.hub_id,
                 "output_taxonomy": self.model_config.output_taxonomy,
                 "requires_remapping": self.model_config.requires_remapping,

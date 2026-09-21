@@ -154,7 +154,7 @@ export function Playground() {
           </h1>
           <p className="mt-3 text-sm leading-7 text-muted-foreground sm:text-base">
             在同一产品类别契约下手动切换模型对比效果。当前支持 ADE20K /
-            PASCAL VOC 零样本映射，入职后换成自有数据微调即可。
+            PASCAL VOC 预训练映射。ADE20K 的 grass 仅是“可割”的代理预测，不代表可安全通行。
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -238,7 +238,7 @@ export function Playground() {
                 <img
                   src={preview}
                   alt="分割结果"
-                  className="aspect-[16/10] w-full object-cover"
+                  className="h-auto w-full object-contain"
                 />
               ) : (
                 <div className="flex aspect-[16/10] flex-col items-center justify-center gap-3 px-6 text-center text-sm text-muted-foreground">
@@ -284,7 +284,7 @@ export function Playground() {
                   ))}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {result.stats.latency_ms.toFixed(0)} ms · {result.stats.device} ·{" "}
+                  模型推理 {result.stats.latency_ms.toFixed(0)} ms · {result.stats.device} ·{" "}
                   {result.model?.display_name ||
                     activeModel?.display_name ||
                     result.stats.model.split("/").at(-1)}
@@ -320,13 +320,23 @@ export function Playground() {
                 </span>
               </div>
               <div className="flex items-center justify-between gap-3">
-                <span className="text-muted-foreground">源类别</span>
+                <span className="text-muted-foreground">训练数据集</span>
                 <span className="text-right">
                   {activeModel?.output_taxonomy ||
                     result?.model?.output_taxonomy ||
                     "—"}
                 </span>
               </div>
+              <p className="text-xs leading-5 text-muted-foreground">
+                {activeModel?.output_taxonomy === "pascal_voc"
+                  ? "VOC 无草地类别，不能用于判断 CNN 的割草分割能力。"
+                  : "仅将 grass 映射为可割代理；植被与裸地不算可割。二分类评测不验证人、动物或小障碍物检测能力。"}
+              </p>
+              {result?.stats.input_shape ? (
+                <p className="text-xs text-muted-foreground">
+                  实际输入：{result.stats.input_shape.slice(2).join(" × ")}（高 × 宽）
+                </p>
+              ) : null}
             </CardContent>
           </Card>
 
@@ -360,7 +370,7 @@ export function Playground() {
           <Card>
             <CardHeader>
               <CardTitle>像素占比</CardTitle>
-              <CardDescription>当前帧的可割面积和安全类占比。</CardDescription>
+              <CardDescription>预测像素占比，不是准确率；需有标注数据才能评测。</CardDescription>
             </CardHeader>
             <CardContent>
               {result ? (

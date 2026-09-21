@@ -15,14 +15,23 @@ def logits_to_label_mask(logits: np.ndarray, output_size: tuple[int, int]) -> np
 
     if logits.ndim != 4:
         raise ValueError(f"Expected logits NCHW, got shape {logits.shape}")
-    tensor = torch.from_numpy(logits.astype(np.float32))
-    upsampled = torch.nn.functional.interpolate(
-        tensor,
-        size=output_size,
-        mode="bilinear",
-        align_corners=False,
-    )
-    return upsampled.argmax(dim=1)[0].cpu().numpy().astype(np.uint8)
+    if logits.shape[0] != 1 or not 1 <= logits.shape[1] <= 256:
+        raise ValueError("Expected one image and 1..256 classes")
+    tensor = torch.from_numpy(np.asarray(logits, dtype=np.float32))
+    # 4000x3000 annotations would allocate 7.2 GB for 150 upsampled channels.
+    # Class chunks preserve exact resize-before-argmax semantics and first ties.
+    best = torch.full(output_size, -float("inf"))
+    labels = torch.zeros(output_size, dtype=torch.uint8)
+    for start in range(0, tensor.shape[1], 8):
+        enlarged = torch.nn.functional.interpolate(
+            tensor[:, start:start+8], size=output_size,
+            mode="bilinear", align_corners=False,
+        )[0]
+        scores, indices = enlarged.max(dim=0)
+        update = scores > best
+        best[update] = scores[update]
+        labels[update] = (indices[update] + start).to(torch.uint8)
+    return labels.numpy()
 
 
 def apply_taxonomy_remap(

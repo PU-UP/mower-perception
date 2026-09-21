@@ -6,6 +6,7 @@
 - **Models**:
   - `segformer_b0_ade20k`（SegFormer-B0 / ADE20K 零样本）
   - `deeplabv3plus_mobilenet_v2`（DeepLabV3+ + MobileNetV2 / PASCAL VOC 零样本）
+  - `mit_resnet18_ade20k`（MIT ResNet18-dilated + PPM_deepsup / 完整 ADE20K 权重）
 - **Backend**: `torch`（Hugging Face Transformers + PyTorch）
 - Web 预览页支持手动切换模型对比效果
 
@@ -127,3 +128,7 @@ PYTHONPATH=. pytest tests/ -q
 1. 按 yaml 里的 `id` 准备 `images/` 与 `masks/`
 2. 微调轻量分割网后新增 model yaml（`output.taxonomy: mower`）
 3. 改 `perception.model`，CLI / FastAPI / 前端契约保持不变
+
+## 公平对比与割草场景评测
+
+参见 [评测流程、权重和数据许可](docs/evaluation.md) 与 [实测报告](evaluation/REPORT.md)。首次选择 MIT CNN 前运行 `python -m tools.download_mit_weights`。ADE20K grass 仅是可割代理；VOC 无草地类别，不参与可割准确率比较。

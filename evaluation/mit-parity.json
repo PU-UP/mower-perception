@@ -1,0 +1,28 @@
+{
+  "official_revision": "8f27c9b97d2ca7c6e05333d5766d144bf7d8c31b",
+  "device": "cuda",
+  "comparisons": [
+    {
+      "image": "assets/samples/lawn_path.jpg",
+      "input_shape": [
+        1,
+        3,
+        600,
+        904
+      ],
+      "max_probability_difference": 0.0,
+      "argmax_equal": true
+    },
+    {
+      "image": "assets/samples/garden_walk.jpg",
+      "input_shape": [
+        1,
+        3,
+        488,
+        1000
+      ],
+      "max_probability_difference": 0.0,
+      "argmax_equal": true
+    }
+  ]
+}

@@ -22,6 +22,7 @@ class PerceptionResult:
 
     def to_stats(self) -> dict[str, Any]:
         return {
+            "input_shape": self.metadata.get("input_shape"),
             "latency_ms": self.latency_ms,
             "model": self.model_name,
             "backend": self.backend,

@@ -6,6 +6,7 @@ display_name: SegFormer-B0 (ADE20K)
 task: semantic_segmentation
 loader: transformers
 hub_id: nvidia/segformer-b0-finetuned-ade-512-512
+revision: 489d5cd81a0b59fab9b7ea758d3548ebe99677da
 overlay_alpha: 0.46
 
 input:
@@ -25,7 +26,7 @@ artifacts:
 
 preprocess:
   # Hugging Face AutoImageProcessor handles mean/std for this loader.
-  resize_mode: long_side
+  resize_mode: processor
 
 # Reserved for future multi-model scheduling (not used by the simple engine yet).
 scheduling:

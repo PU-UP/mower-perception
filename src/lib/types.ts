@@ -33,6 +33,7 @@ export type InferResponse = {
     traversable_ratio: number
     safety_ratio: number
     pixels: number
+    input_shape?: number[]
     latency_ms: number
     model: string
     model_id?: string

@@ -1,0 +1,182 @@
+[
+  {
+    "model": "deeplabv3plus_mobilenet_v2",
+    "sample": "lawn_path",
+    "preview_size": [
+      1280,
+      854
+    ],
+    "input_shape": [
+      1,
+      3,
+      342,
+      513
+    ],
+    "ok": true
+  },
+  {
+    "model": "deeplabv3plus_mobilenet_v2",
+    "sample": "garden_walk",
+    "preview_size": [
+      1280,
+      622
+    ],
+    "input_shape": [
+      1,
+      3,
+      249,
+      513
+    ],
+    "ok": true
+  },
+  {
+    "model": "deeplabv3plus_mobilenet_v2",
+    "sample": "backyard_house",
+    "preview_size": [
+      1280,
+      854
+    ],
+    "input_shape": [
+      1,
+      3,
+      342,
+      513
+    ],
+    "ok": true
+  },
+  {
+    "model": "deeplabv3plus_mobilenet_v2",
+    "upload": "garden_walk.jpg",
+    "preview_size": [
+      1280,
+      622
+    ],
+    "input_shape": [
+      1,
+      3,
+      249,
+      513
+    ],
+    "ok": true
+  },
+  {
+    "model": "mit_resnet18_ade20k",
+    "sample": "lawn_path",
+    "preview_size": [
+      1280,
+      854
+    ],
+    "input_shape": [
+      1,
+      3,
+      600,
+      904
+    ],
+    "ok": true
+  },
+  {
+    "model": "mit_resnet18_ade20k",
+    "sample": "garden_walk",
+    "preview_size": [
+      1280,
+      622
+    ],
+    "input_shape": [
+      1,
+      3,
+      488,
+      1000
+    ],
+    "ok": true
+  },
+  {
+    "model": "mit_resnet18_ade20k",
+    "sample": "backyard_house",
+    "preview_size": [
+      1280,
+      854
+    ],
+    "input_shape": [
+      1,
+      3,
+      600,
+      904
+    ],
+    "ok": true
+  },
+  {
+    "model": "mit_resnet18_ade20k",
+    "upload": "garden_walk.jpg",
+    "preview_size": [
+      1280,
+      622
+    ],
+    "input_shape": [
+      1,
+      3,
+      488,
+      1000
+    ],
+    "ok": true
+  },
+  {
+    "model": "segformer_b0_ade20k",
+    "sample": "lawn_path",
+    "preview_size": [
+      1280,
+      854
+    ],
+    "input_shape": [
+      1,
+      3,
+      512,
+      512
+    ],
+    "ok": true
+  },
+  {
+    "model": "segformer_b0_ade20k",
+    "sample": "garden_walk",
+    "preview_size": [
+      1280,
+      622
+    ],
+    "input_shape": [
+      1,
+      3,
+      512,
+      512
+    ],
+    "ok": true
+  },
+  {
+    "model": "segformer_b0_ade20k",
+    "sample": "backyard_house",
+    "preview_size": [
+      1280,
+      854
+    ],
+    "input_shape": [
+      1,
+      3,
+      512,
+      512
+    ],
+    "ok": true
+  },
+  {
+    "model": "segformer_b0_ade20k",
+    "upload": "garden_walk.jpg",
+    "preview_size": [
+      1280,
+      622
+    ],
+    "input_shape": [
+      1,
+      3,
+      512,
+      512
+    ],
+    "ok": true
+  }
+]
