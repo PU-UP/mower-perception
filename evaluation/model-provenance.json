@@ -1,0 +1,46 @@
+{
+  "checked_on": "2026-09-21",
+  "cnn_source": "https://github.com/CSAILVision/semantic-segmentation-pytorch",
+  "cnn_source_revision": "8f27c9b97d2ca7c6e05333d5766d144bf7d8c31b",
+  "cnn_config": "config/ade20k-resnet18dilated-ppm_deepsup.yaml",
+  "candidate_unavailable": {
+    "model": "mobilenetv2dilated-ppm_deepsup",
+    "encoder_http": 404,
+    "decoder_http": 404,
+    "configuration_in_pinned_tree": false,
+    "https": "certificate hostname mismatch",
+    "caveat": "Does not prove weights do not exist elsewhere; complete artifacts could not be verified here"
+  },
+  "weights": {
+    "decoder_epoch_20.pth": {
+      "url": "http://sceneparsing.csail.mit.edu/model/pytorch/ade20k-resnet18dilated-ppm_deepsup/decoder_epoch_20.pth",
+      "bytes": 53019215,
+      "sha256": "b9def740d73cb425ae5e17a13949400c044159099cadc957c0743b721be2289e"
+    },
+    "encoder_epoch_20.pth": {
+      "url": "http://sceneparsing.csail.mit.edu/model/pytorch/ade20k-resnet18dilated-ppm_deepsup/encoder_epoch_20.pth",
+      "bytes": 45415518,
+      "sha256": "adcdcbf7530eaf358f2bdeee13186c0d09e7a039bff842715b84395c841738b9"
+    }
+  },
+  "segformer_revision": "489d5cd81a0b59fab9b7ea758d3548ebe99677da",
+  "licenses": {
+    "mit_code": "BSD-3-Clause",
+    "mit_weights": "No separate explicit weight license at download directory; do not infer all rights from code license",
+    "segformer": "Model card links NVIDIA SegFormer license, non-commercial research/evaluation",
+    "grassseghb": "No explicit license found; commercial permission unconfirmed",
+    "ycor": "CC BY 4.0 on official page",
+    "rellis3d": "CC BY-NC-SA 3.0 on official page"
+  },
+  "measured_parameters": {
+    "mit_resnet18_ade20k_including_auxiliary_head": 24566636,
+    "segformer_b0_ade20k": 3752694
+  },
+  "measurement_hardware": {
+    "gpu": "NVIDIA GeForce RTX 5060 Laptop GPU",
+    "memory_mib": 8151,
+    "driver": "592.27",
+    "cpu": "Intel Core i9-14900HX",
+    "wsl": "Ubuntu-22.04"
+  }
+}

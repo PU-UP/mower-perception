@@ -6,6 +6,7 @@
 - **Models**:
   - `segformer_b0_ade20k`（SegFormer-B0 / ADE20K 零样本）
   - `deeplabv3plus_mobilenet_v2`（DeepLabV3+ + MobileNetV2 / PASCAL VOC 零样本）
+  - `mit_resnet18_ade20k`（MIT ResNet18-dilated + PPM_deepsup / 完整 ADE20K 权重）
 - **Backend**: `torch`（Hugging Face Transformers + PyTorch）
 - Web 预览页支持手动切换模型对比效果
 
@@ -116,14 +117,31 @@ Backend 只处理 tensor / device，不要写 grass / taxonomy 逻辑。
 
 若模型直接输出 mower 类别，设 `requires_remapping: false` 并删除 ADE20K mapping。
 
-## 测试
+## 打开网页评估（WSL）
+
+在 Ubuntu-22.04 终端中只需：
 
 ```bash
-PYTHONPATH=. pytest tests/ -q
+cd /home/watermango/github/mower-perception
+./scripts/dev.sh
 ```
+
+打开 http://127.0.0.1:43129。网页分为两个标签：“数据集横向对比”先展示完整 256 张评测的总体指标，再按庭院逐图查看原图、标注和两模型的历史预测；“单图试验”用于三张样例、自己上传的图片或从评测集带入的图片。点击“在单图试验中打开”会切换标签并重新推理，之后切换模型保持同一张图。ADE20K 明确标为训练数据，GrassSegHB 标为评测数据；无人工标注的图片不显示准确率。
+
+模型自动优先使用本地缓存，缺少文件时才尝试下载，不需要手动设置 HF_HUB_OFFLINE。首次环境安装和 CNN 权重下载见上文及评测文档。数据尚未下载时网页会说明；不自动下载近 1 GB 数据。Ctrl+C 停止服务。
+
+### 开发者验证（日常使用无需执行）
+
+`./scripts/test.sh` 汇总 Python 测试、lint、类型检查、构建；`python -m tools.verify_api` 在服务运行时验证样例及上传接口。这些是维护代码的工具，不是使用网页前必须执行的步骤。
+
+需要重新生成全部标注评测时，参见 [评测流程](docs/evaluation.md)。已有完整结果在 `outputs/grassseghb/`，网页直接读取它们，不会在启动时重复跑 256 张推理。
 
 ## 换自己的数据
 
 1. 按 yaml 里的 `id` 准备 `images/` 与 `masks/`
 2. 微调轻量分割网后新增 model yaml（`output.taxonomy: mower`）
 3. 改 `perception.model`，CLI / FastAPI / 前端契约保持不变
+
+## 公平对比与割草场景评测
+
+参见 [评测流程、权重和数据许可](docs/evaluation.md) 与 [实测报告](evaluation/REPORT.md)。首次选择 MIT CNN 前运行 `python -m tools.download_mit_weights`。ADE20K grass 仅是可割代理；VOC 无草地类别，不参与可割准确率比较。

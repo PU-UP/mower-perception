@@ -30,7 +30,7 @@ build-backend = "setuptools.build_meta"
 include = ["mowerseg*"]
 
 [tool.setuptools.package-data]
-mowerseg = ["models/configs/*.yaml"]
+mowerseg = ["models/configs/*.yaml", "models/*.csv", "models/*LICENSE.txt"]
 
 [tool.pytest.ini_options]
 pythonpath = ["."]

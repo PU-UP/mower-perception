@@ -1,0 +1,16 @@
+name: mit_resnet18_ade20k
+display_name: ResNet18-dilated + PPM (ADE20K)
+task: semantic_segmentation
+loader: mit_csail
+input:
+  long_side: 1000
+output:
+  taxonomy: ade20k
+  num_classes: 150
+  requires_remapping: true
+preprocess:
+  resize_mode: mit_single_scale
+  short_side: 600
+  multiple: 8
+artifacts:
+  torch: .cache/mit-resnet18

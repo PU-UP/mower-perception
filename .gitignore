@@ -102,3 +102,6 @@ huggingface/
 tmp/
 temp/
 *.tmp
+
+# Evaluation datasets (never commit raw data)
+/data/

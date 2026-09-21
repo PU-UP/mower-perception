@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import Any
+from mowerseg.models.hf_cache import from_pretrained_cached
 
 import numpy as np
 
@@ -42,7 +43,21 @@ class TorchBackend(InferenceBackend):
                 raise ValueError(
                     f"Model '{model_config.name}' has no torch artifact or hub_id"
                 )
-            self._model = AutoModelForSemanticSegmentation.from_pretrained(source)
+            self._model = from_pretrained_cached(
+                AutoModelForSemanticSegmentation, source, revision=model_config.raw.get("revision")
+            )
+            if model_config.output_taxonomy == "ade20k":
+                if self._model.config.num_labels != 150 or self._model.config.id2label.get(9) != "grass":
+                    raise ValueError("Expected ADE20K 150 labels with grass at zero-based index 9")
+        elif model_config.loader == "mit_csail":
+            import os
+            from pathlib import Path
+            from mowerseg.models.mit_resnet import load_mit_resnet18
+
+            directory = os.environ.get("MOWER_MIT_WEIGHTS") or str(
+                Path(__file__).resolve().parents[2] / model_config.artifact_for("torch")
+            )
+            self._model = load_mit_resnet18(directory)
         else:
             raise NotImplementedError(
                 f"TorchBackend loader '{model_config.loader}' is not implemented yet"
@@ -85,7 +100,7 @@ class TorchBackend(InferenceBackend):
 
         return {
             "logits": logits.detach().cpu().numpy(),
-            "latency_ms": round(latency_ms, 1),
+            "latency_ms": latency_ms,
         }
 
     def close(self) -> None:

@@ -25,6 +25,8 @@ export type ModelCard = {
 }
 
 export type InferResponse = {
+  evaluation_protocol?: { boundary_radius_pixels: number } | null
+  evaluation?: Record<string, number | null> | null
   overlay: string
   mask: string
   input: string
@@ -33,6 +35,7 @@ export type InferResponse = {
     traversable_ratio: number
     safety_ratio: number
     pixels: number
+    input_shape?: number[]
     latency_ms: number
     model: string
     model_id?: string

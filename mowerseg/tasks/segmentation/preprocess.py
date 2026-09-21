@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import Any
+from mowerseg.models.hf_cache import from_pretrained_cached
 
 import numpy as np
 from PIL import Image
@@ -31,13 +32,27 @@ class SegmentationPreprocessor:
             source = model_config.artifact_for("torch") or model_config.hub_id
             if not source:
                 raise ValueError(f"Model '{model_config.name}' missing hub_id/artifact")
-            self._processor = AutoImageProcessor.from_pretrained(source)
+            self._processor = from_pretrained_cached(
+                AutoImageProcessor, source, revision=model_config.raw.get("revision")
+            )
 
     def __call__(self, frame: Frame) -> dict[str, Any]:
         rgb = frame.image.convert("RGB")
         preprocess = self.model_config.preprocess or {}
         resize_mode = str(preprocess.get("resize_mode", "long_side"))
 
+        if resize_mode == "mit_single_scale":
+            width, height = rgb.size
+            scale = min(float(preprocess["short_side"]) / min(width, height),
+                        self.model_config.input_long_side / max(width, height))
+            multiple = int(preprocess["multiple"])
+            size = tuple(((max(1, int(x * scale)) - 1) // multiple + 1) * multiple
+                         for x in (width, height))
+            image = rgb.resize(size, Image.Resampling.BILINEAR)
+            pixels = np.asarray(image, dtype=np.float32).transpose(2, 0, 1) / 255.0
+            mean = np.array([0.485, 0.456, 0.406], dtype=np.float32)[:, None, None]
+            std = np.array([0.229, 0.224, 0.225], dtype=np.float32)[:, None, None]
+            return {"pixel_values": np.ascontiguousarray(((pixels - mean) / std)[None])}
         if resize_mode == "long_side":
             image = resize_long_side(rgb, self.model_config.input_long_side)
         elif resize_mode == "processor":

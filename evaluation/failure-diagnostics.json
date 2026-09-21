@@ -1,0 +1,66 @@
+[
+  {
+    "image": "images/1G0041734.jpg",
+    "binary_prediction_matches_saved": true,
+    "missed_mowable_pixels": 6230707,
+    "raw_classes_inside_false_negatives": [
+      {
+        "index": 4,
+        "label": "tree",
+        "pixels": 5657643
+      },
+      {
+        "index": 29,
+        "label": "field",
+        "pixels": 425420
+      },
+      {
+        "index": 0,
+        "label": "wall",
+        "pixels": 67986
+      },
+      {
+        "index": 17,
+        "label": "plant;flora;plant;life",
+        "pixels": 52712
+      },
+      {
+        "index": 13,
+        "label": "earth;ground",
+        "pixels": 24950
+      }
+    ]
+  },
+  {
+    "image": "images/4G0192633.jpg",
+    "binary_prediction_matches_saved": true,
+    "missed_mowable_pixels": 8033798,
+    "raw_classes_inside_false_negatives": [
+      {
+        "index": 66,
+        "label": "flower",
+        "pixels": 7043490
+      },
+      {
+        "index": 4,
+        "label": "tree",
+        "pixels": 808942
+      },
+      {
+        "index": 16,
+        "label": "mountain;mount",
+        "pixels": 140215
+      },
+      {
+        "index": 17,
+        "label": "plant;flora;plant;life",
+        "pixels": 23063
+      },
+      {
+        "index": 12,
+        "label": "person;individual;someone;somebody;mortal;soul",
+        "pixels": 13163
+      }
+    ]
+  }
+]

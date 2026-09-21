@@ -1,0 +1,23 @@
+{
+  "n": 256,
+  "gardens": 16,
+  "sizes": [
+    [
+      4000,
+      3000
+    ]
+  ],
+  "labels": [
+    0,
+    1
+  ],
+  "luminance_range": [
+    42.644114583333334,
+    183.95135416666668
+  ],
+  "mowable_fraction_range": [
+    0.17096616666666667,
+    0.87759525
+  ],
+  "note": "Luminance is a coverage proxy, not a verified illumination annotation; contact sheets need human review"
+}

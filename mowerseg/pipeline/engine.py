@@ -107,6 +107,8 @@ class PerceptionEngine:
         return replace(
             model_config,
             hub_id=hub_id,
+            raw=({k: v for k, v in model_config.raw.items() if k != "revision"}
+                 if hub_id != model_config.hub_id else model_config.raw),
             input_long_side=int(legacy.get("input_long_side", model_config.input_long_side)),
             overlay_alpha=float(legacy.get("overlay_alpha", model_config.overlay_alpha)),
         )

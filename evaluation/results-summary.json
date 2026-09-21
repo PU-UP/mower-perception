@@ -1,0 +1,580 @@
+{
+  "software": {
+    "torch": "2.14.0",
+    "torchvision": "0.29.0",
+    "transformers": "5.17.0",
+    "numpy": "2.2.6",
+    "pillow": "12.3.0"
+  },
+  "code_revision": "4424063d46a6f49e1d544de501f0dcc6451f69a7",
+  "manifest_sha256": "0cf60fb87b4e1290db6a052ef5a37842fb65cecb2bfb786174e0e3ef07aa92cb",
+  "sample_count": 256,
+  "seed": 20260921,
+  "scope": "exploratory grass proxy, not full mower safety evaluation",
+  "hardware": {
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.35",
+    "cpu": "x86_64",
+    "gpu": "NVIDIA GeForce RTX 5060 Laptop GPU",
+    "torch": "2.14.0+cu130",
+    "cuda": "13.0",
+    "threads": 4,
+    "cpu_model": "Intel(R) Core(TM) i9-14900HX",
+    "matmul_precision": "highest",
+    "cudnn_allow_tf32": true,
+    "matmul_allow_tf32": false
+  },
+  "protocol": {
+    "warmup": 5,
+    "batch_size": 1,
+    "precision": "float32",
+    "boundary_radius_pixels": 3,
+    "boundary": "4-neighbour transition pixels, square Chebyshev tolerance at original annotation resolution; no image perimeter",
+    "aggregation": "micro: sum confusion/boundary counts across images; undefined ratios are null",
+    "model_ms": "forward only; CUDA events + synchronization; excludes transfers and output resizing",
+    "end_to_end_ms": "warm-cache file decode + preprocess + transfers + forward + full-resolution postprocess + product views; excludes model load, hash verification, metric calculation and artifact saving",
+    "order": [
+      "segformer_b0_ade20k",
+      "mit_resnet18_ade20k"
+    ]
+  },
+  "models": {
+    "segformer_b0_ade20k": {
+      "config": {
+        "name": "segformer_b0_ade20k",
+        "display_name": "SegFormer-B0 (ADE20K)",
+        "task": "semantic_segmentation",
+        "loader": "transformers",
+        "hub_id": "nvidia/segformer-b0-finetuned-ade-512-512",
+        "revision": "489d5cd81a0b59fab9b7ea758d3548ebe99677da",
+        "overlay_alpha": 0.46,
+        "input": {
+          "long_side": 512
+        },
+        "output": {
+          "taxonomy": "ade20k",
+          "num_classes": 150,
+          "requires_remapping": true
+        },
+        "artifacts": {
+          "torch": null,
+          "onnx": null,
+          "horizon_x5": null,
+          "rk3588": null
+        },
+        "preprocess": {
+          "resize_mode": "processor"
+        },
+        "scheduling": {
+          "frequency_hz": null,
+          "enabled": true,
+          "priority": 0
+        }
+      },
+      "device": "cuda",
+      "counts": {
+        "tp": 2151476349,
+        "fp": 44944287,
+        "tn": 771414295,
+        "fn": 104165069,
+        "pred_boundary": 3190008,
+        "true_boundary": 2745937,
+        "matched_pred_boundary": 361898,
+        "matched_true_boundary": 364267,
+        "boundary_band_pixels": 12851520,
+        "boundary_band_errors": 5857340
+      },
+      "metrics": {
+        "mowable_iou": 0.9351863502950871,
+        "nonmowable_false_positive_rate": 0.05505458996938676,
+        "predicted_mowable_error_fraction": 0.020462513538322083,
+        "boundary_precision": 0.11344736439532441,
+        "boundary_recall": 0.13265672154896488,
+        "boundary_f1": 0.12230236138754136,
+        "boundary_band_error_rate": 0.4557702123951097
+      },
+      "per_garden": {
+        "0": {
+          "n": 16,
+          "metrics": {
+            "mowable_iou": 0.940703480039265,
+            "nonmowable_false_positive_rate": 0.11900432694502373,
+            "predicted_mowable_error_fraction": 0.03380225506615497,
+            "boundary_precision": 0.1253708657820902,
+            "boundary_recall": 0.16890770252324036,
+            "boundary_f1": 0.143918770738554,
+            "boundary_band_error_rate": 0.44346363179960835
+          }
+        },
+        "1": {
+          "n": 16,
+          "metrics": {
+            "mowable_iou": 0.9005796598228646,
+            "nonmowable_false_positive_rate": 0.10576296538438903,
+            "predicted_mowable_error_fraction": 0.04411817892778946,
+            "boundary_precision": 0.11717165029627492,
+            "boundary_recall": 0.13173773441499015,
+            "boundary_f1": 0.12402849145766398,
+            "boundary_band_error_rate": 0.46235068247704725
+          }
+        },
+        "2": {
+          "n": 16,
+          "metrics": {
+            "mowable_iou": 0.8595280102030405,
+            "nonmowable_false_positive_rate": 0.04595337304273804,
+            "predicted_mowable_error_fraction": 0.018647488567116476,
+            "boundary_precision": 0.09600979666038244,
+            "boundary_recall": 0.13442669156376064,
+            "boundary_f1": 0.11201593482201315,
+            "boundary_band_error_rate": 0.4604782816720645
+          }
+        },
+        "3": {
+          "n": 16,
+          "metrics": {
+            "mowable_iou": 0.980603427425719,
+            "nonmowable_false_positive_rate": 0.024344141625032765,
+            "predicted_mowable_error_fraction": 0.008246485143618811,
+            "boundary_precision": 0.22386310045139124,
+            "boundary_recall": 0.2181088518075518,
+            "boundary_f1": 0.22094851744313873,
+            "boundary_band_error_rate": 0.42524595985510144
+          }
+        },
+        "4": {
+          "n": 16,
+          "metrics": {
+            "mowable_iou": 0.8468152438832366,
+            "nonmowable_false_positive_rate": 0.08795350836341226,
+            "predicted_mowable_error_fraction": 0.0376933126971171,
+            "boundary_precision": 0.03795300835304015,
+            "boundary_recall": 0.06640542753538425,
+            "boundary_f1": 0.04830056572776202,
+            "boundary_band_error_rate": 0.4725327783870376
+          }
+        },
+        "5": {
+          "n": 16,
+          "metrics": {
+            "mowable_iou": 0.8758315942930309,
+            "nonmowable_false_positive_rate": 0.02480355976416301,
+            "predicted_mowable_error_fraction": 0.014240616708994836,
+            "boundary_precision": 0.07708717245451385,
+            "boundary_recall": 0.08381607530774801,
+            "boundary_f1": 0.08031092400639887,
+            "boundary_band_error_rate": 0.47440970694731144
+          }
+        },
+        "6": {
+          "n": 16,
+          "metrics": {
+            "mowable_iou": 0.9848024460646488,
+            "nonmowable_false_positive_rate": 0.030734568939150126,
+            "predicted_mowable_error_fraction": 0.012061497764366401,
+            "boundary_precision": 0.20436638111483932,
+            "boundary_recall": 0.19104078216497056,
+            "boundary_f1": 0.19747903893574675,
+            "boundary_band_error_rate": 0.4401298115794611
+          }
+        },
+        "7": {
+          "n": 16,
+          "metrics": {
+            "mowable_iou": 0.9039431679278095,
+            "nonmowable_false_positive_rate": 0.038650420511761915,
+            "predicted_mowable_error_fraction": 0.016826617040436122,
+            "boundary_precision": 0.10681171744421313,
+            "boundary_recall": 0.10685769459814176,
+            "boundary_f1": 0.10683470107452021,
+            "boundary_band_error_rate": 0.4634479517780169
+          }
+        },
+        "8": {
+          "n": 16,
+          "metrics": {
+            "mowable_iou": 0.9597407055837743,
+            "nonmowable_false_positive_rate": 0.038503431864132236,
+            "predicted_mowable_error_fraction": 0.014449484031304987,
+            "boundary_precision": 0.09035482722869567,
+            "boundary_recall": 0.09832079003562626,
+            "boundary_f1": 0.09416964550551672,
+            "boundary_band_error_rate": 0.45881099249828655
+          }
+        },
+        "9": {
+          "n": 16,
+          "metrics": {
+            "mowable_iou": 0.9840022369410801,
+            "nonmowable_false_positive_rate": 0.045087183884899545,
+            "predicted_mowable_error_fraction": 0.01384968605971198,
+            "boundary_precision": 0.16340898159079978,
+            "boundary_recall": 0.14804059081899418,
+            "boundary_f1": 0.1553456117640919,
+            "boundary_band_error_rate": 0.44907432145498727
+          }
+        },
+        "10": {
+          "n": 16,
+          "metrics": {
+            "mowable_iou": 0.987350394128269,
+            "nonmowable_false_positive_rate": 0.03684367614381162,
+            "predicted_mowable_error_fraction": 0.010332667799134084,
+            "boundary_precision": 0.1669963662892658,
+            "boundary_recall": 0.15461538461538463,
+            "boundary_f1": 0.1605675621649876,
+            "boundary_band_error_rate": 0.4524014143469025
+          }
+        },
+        "11": {
+          "n": 16,
+          "metrics": {
+            "mowable_iou": 0.985215846149824,
+            "nonmowable_false_positive_rate": 0.04096569515313841,
+            "predicted_mowable_error_fraction": 0.013885951258473963,
+            "boundary_precision": 0.21384059870126088,
+            "boundary_recall": 0.1940642114583675,
+            "boundary_f1": 0.20347299728338758,
+            "boundary_band_error_rate": 0.44232099289275484
+          }
+        },
+        "12": {
+          "n": 16,
+          "metrics": {
+            "mowable_iou": 0.9389500710880818,
+            "nonmowable_false_positive_rate": 0.05594799608071486,
+            "predicted_mowable_error_fraction": 0.020594304124359447,
+            "boundary_precision": 0.07793077228246495,
+            "boundary_recall": 0.11785002733974823,
+            "boundary_f1": 0.09382067763354013,
+            "boundary_band_error_rate": 0.46169483167327074
+          }
+        },
+        "13": {
+          "n": 16,
+          "metrics": {
+            "mowable_iou": 0.9467475774399379,
+            "nonmowable_false_positive_rate": 0.04705334118661188,
+            "predicted_mowable_error_fraction": 0.01380529498972953,
+            "boundary_precision": 0.06628958875493476,
+            "boundary_recall": 0.09682189648462836,
+            "boundary_f1": 0.07869812099389928,
+            "boundary_band_error_rate": 0.46032667274687006
+          }
+        },
+        "14": {
+          "n": 16,
+          "metrics": {
+            "mowable_iou": 0.9913320005525349,
+            "nonmowable_false_positive_rate": 0.025683298070682675,
+            "predicted_mowable_error_fraction": 0.0072534691401465136,
+            "boundary_precision": 0.20669658577518712,
+            "boundary_recall": 0.18682884067499453,
+            "boundary_f1": 0.19626118617139207,
+            "boundary_band_error_rate": 0.4428354538270991
+          }
+        },
+        "15": {
+          "n": 16,
+          "metrics": {
+            "mowable_iou": 0.8560609380533021,
+            "nonmowable_false_positive_rate": 0.10398390425683256,
+            "predicted_mowable_error_fraction": 0.055021005967295866,
+            "boundary_precision": 0.055234918950525715,
+            "boundary_recall": 0.07033701919567915,
+            "boundary_f1": 0.06187783053840404,
+            "boundary_band_error_rate": 0.4690296139199356
+          }
+        }
+      },
+      "model_latency": {
+        "count": 256,
+        "mean_ms": 70.5743640512228,
+        "median_ms": 75.93854522705078,
+        "p95_ms": 77.02822494506836
+      },
+      "end_to_end_latency": {
+        "count": 256,
+        "mean_ms": 2678.736632402341,
+        "median_ms": 2669.2172030000165,
+        "p95_ms": 2859.5703425002057
+      },
+      "worst_false_positive_samples": [
+        "images/1G0041734.jpg",
+        "images/1G0082048.jpg",
+        "images/15G0031671.jpg",
+        "images/0G0051701.jpg",
+        "images/4G0132356.jpg",
+        "images/15G0041706.jpg",
+        "images/0G0041669.jpg",
+        "images/4G0112270.jpg",
+        "images/4G0142382.jpg",
+        "images/1G0061933.jpg"
+      ]
+    },
+    "mit_resnet18_ade20k": {
+      "config": {
+        "name": "mit_resnet18_ade20k",
+        "display_name": "ResNet18-dilated + PPM (ADE20K)",
+        "task": "semantic_segmentation",
+        "loader": "mit_csail",
+        "input": {
+          "long_side": 1000
+        },
+        "output": {
+          "taxonomy": "ade20k",
+          "num_classes": 150,
+          "requires_remapping": true
+        },
+        "preprocess": {
+          "resize_mode": "mit_single_scale",
+          "short_side": 600,
+          "multiple": 8
+        },
+        "artifacts": {
+          "torch": ".cache/mit-resnet18"
+        }
+      },
+      "device": "cuda",
+      "counts": {
+        "tp": 1782703389,
+        "fp": 32010744,
+        "tn": 784347838,
+        "fn": 472938029,
+        "pred_boundary": 5106805,
+        "true_boundary": 2745937,
+        "matched_pred_boundary": 345942,
+        "matched_true_boundary": 349558,
+        "boundary_band_pixels": 12851520,
+        "boundary_band_errors": 5894354
+      },
+      "metrics": {
+        "mowable_iou": 0.7792720495765649,
+        "nonmowable_false_positive_rate": 0.03921162183605243,
+        "predicted_mowable_error_fraction": 0.017639551826866166,
+        "boundary_precision": 0.06774137645749152,
+        "boundary_recall": 0.12730008008195381,
+        "boundary_f1": 0.08842717646703416,
+        "boundary_band_error_rate": 0.4586503386369861
+      },
+      "per_garden": {
+        "0": {
+          "n": 16,
+          "metrics": {
+            "mowable_iou": 0.7346646160664627,
+            "nonmowable_false_positive_rate": 0.025362630708748484,
+            "predicted_mowable_error_fraction": 0.00970585676568375,
+            "boundary_precision": 0.13137234284913166,
+            "boundary_recall": 0.23772099103585656,
+            "boundary_f1": 0.16922529165227002,
+            "boundary_band_error_rate": 0.4270325264071337
+          }
+        },
+        "1": {
+          "n": 16,
+          "metrics": {
+            "mowable_iou": 0.55760930481448,
+            "nonmowable_false_positive_rate": 0.014734556719451964,
+            "predicted_mowable_error_fraction": 0.010655603068236336,
+            "boundary_precision": 0.08824941450563804,
+            "boundary_recall": 0.19402089893333746,
+            "boundary_f1": 0.12131797016923133,
+            "boundary_band_error_rate": 0.44622378763535364
+          }
+        },
+        "2": {
+          "n": 16,
+          "metrics": {
+            "mowable_iou": 0.8217189614398545,
+            "nonmowable_false_positive_rate": 0.04846052469946166,
+            "predicted_mowable_error_fraction": 0.020512325939692096,
+            "boundary_precision": 0.08842683903220137,
+            "boundary_recall": 0.10837282223827223,
+            "boundary_f1": 0.09738905083132728,
+            "boundary_band_error_rate": 0.46869996446103207
+          }
+        },
+        "3": {
+          "n": 16,
+          "metrics": {
+            "mowable_iou": 0.8674360474583637,
+            "nonmowable_false_positive_rate": 0.03352964047311365,
+            "predicted_mowable_error_fraction": 0.012742419398856964,
+            "boundary_precision": 0.06267432703460743,
+            "boundary_recall": 0.10263599939868102,
+            "boundary_f1": 0.07782504977912097,
+            "boundary_band_error_rate": 0.46436605481371085
+          }
+        },
+        "4": {
+          "n": 16,
+          "metrics": {
+            "mowable_iou": 0.45790355299658964,
+            "nonmowable_false_positive_rate": 0.03886183223736834,
+            "predicted_mowable_error_fraction": 0.031580208629432574,
+            "boundary_precision": 0.022731382052152745,
+            "boundary_recall": 0.06001871563925605,
+            "boundary_f1": 0.03297418114388735,
+            "boundary_band_error_rate": 0.475772876251218
+          }
+        },
+        "5": {
+          "n": 16,
+          "metrics": {
+            "mowable_iou": 0.6567981513952349,
+            "nonmowable_false_positive_rate": 0.026690479522462247,
+            "predicted_mowable_error_fraction": 0.020289386464595407,
+            "boundary_precision": 0.05120715504316807,
+            "boundary_recall": 0.09335525786467133,
+            "boundary_f1": 0.0661369309962856,
+            "boundary_band_error_rate": 0.4720927379784102
+          }
+        },
+        "6": {
+          "n": 16,
+          "metrics": {
+            "mowable_iou": 0.9566417638928383,
+            "nonmowable_false_positive_rate": 0.034214161975608545,
+            "predicted_mowable_error_fraction": 0.013779490582956883,
+            "boundary_precision": 0.1185646078829744,
+            "boundary_recall": 0.1363170362990808,
+            "boundary_f1": 0.12682259649129812,
+            "boundary_band_error_rate": 0.45583214413904194
+          }
+        },
+        "7": {
+          "n": 16,
+          "metrics": {
+            "mowable_iou": 0.7555600661904068,
+            "nonmowable_false_positive_rate": 0.07499317573056442,
+            "predicted_mowable_error_fraction": 0.037683575780080206,
+            "boundary_precision": 0.029654256653477335,
+            "boundary_recall": 0.05160760642695668,
+            "boundary_f1": 0.037665521026556466,
+            "boundary_band_error_rate": 0.47996895516120447
+          }
+        },
+        "8": {
+          "n": 16,
+          "metrics": {
+            "mowable_iou": 0.8910944869390994,
+            "nonmowable_false_positive_rate": 0.03188846100193265,
+            "predicted_mowable_error_fraction": 0.01293994576885582,
+            "boundary_precision": 0.057799375216938564,
+            "boundary_recall": 0.11671030746175255,
+            "boundary_f1": 0.07731127292330822,
+            "boundary_band_error_rate": 0.45445103230712897
+          }
+        },
+        "9": {
+          "n": 16,
+          "metrics": {
+            "mowable_iou": 0.95784840088495,
+            "nonmowable_false_positive_rate": 0.0407157819959712,
+            "predicted_mowable_error_fraction": 0.012878306900363441,
+            "boundary_precision": 0.09306671564350981,
+            "boundary_recall": 0.1325062394226147,
+            "boundary_f1": 0.10933864391429664,
+            "boundary_band_error_rate": 0.4552572297983278
+          }
+        },
+        "10": {
+          "n": 16,
+          "metrics": {
+            "mowable_iou": 0.8340043170129998,
+            "nonmowable_false_positive_rate": 0.03144876700856103,
+            "predicted_mowable_error_fraction": 0.010455820741214037,
+            "boundary_precision": 0.07142294544824436,
+            "boundary_recall": 0.12067948717948718,
+            "boundary_f1": 0.08973633817793056,
+            "boundary_band_error_rate": 0.4611642759775531
+          }
+        },
+        "11": {
+          "n": 16,
+          "metrics": {
+            "mowable_iou": 0.922332293820426,
+            "nonmowable_false_positive_rate": 0.04995009706958371,
+            "predicted_mowable_error_fraction": 0.017956423551148293,
+            "boundary_precision": 0.07731139571842573,
+            "boundary_recall": 0.11934542353982881,
+            "boundary_f1": 0.09383616903061996,
+            "boundary_band_error_rate": 0.4607743714861568
+          }
+        },
+        "12": {
+          "n": 16,
+          "metrics": {
+            "mowable_iou": 0.6307186151083961,
+            "nonmowable_false_positive_rate": 0.0280901056230739,
+            "predicted_mowable_error_fraction": 0.015624693213983609,
+            "boundary_precision": 0.05915441589047245,
+            "boundary_recall": 0.1582248647153838,
+            "boundary_f1": 0.08611399785206024,
+            "boundary_band_error_rate": 0.4517773367620002
+          }
+        },
+        "13": {
+          "n": 16,
+          "metrics": {
+            "mowable_iou": 0.8246882833824287,
+            "nonmowable_false_positive_rate": 0.027039419380272746,
+            "predicted_mowable_error_fraction": 0.009201838252437672,
+            "boundary_precision": 0.07107879003261142,
+            "boundary_recall": 0.17470489038785836,
+            "boundary_f1": 0.10104667812204163,
+            "boundary_band_error_rate": 0.44079540115523863
+          }
+        },
+        "14": {
+          "n": 16,
+          "metrics": {
+            "mowable_iou": 0.8927088831250662,
+            "nonmowable_false_positive_rate": 0.03199220058551169,
+            "predicted_mowable_error_fraction": 0.009987997433272505,
+            "boundary_precision": 0.09220012882046168,
+            "boundary_recall": 0.17977481919789612,
+            "boundary_f1": 0.1218881489599728,
+            "boundary_band_error_rate": 0.4459015132009245
+          }
+        },
+        "15": {
+          "n": 16,
+          "metrics": {
+            "mowable_iou": 0.6540747119527639,
+            "nonmowable_false_positive_rate": 0.07633810100481436,
+            "predicted_mowable_error_fraction": 0.05365404905660279,
+            "boundary_precision": 0.031791508699221406,
+            "boundary_recall": 0.06384114298226407,
+            "boundary_f1": 0.042445884680657,
+            "boundary_band_error_rate": 0.4740326712901328
+          }
+        }
+      },
+      "model_latency": {
+        "count": 256,
+        "mean_ms": 128.810039550066,
+        "median_ms": 151.0111541748047,
+        "p95_ms": 235.23973083496094
+      },
+      "end_to_end_latency": {
+        "count": 256,
+        "mean_ms": 2686.698087753907,
+        "median_ms": 2687.9272800001672,
+        "p95_ms": 2881.7201892497906
+      },
+      "worst_false_positive_samples": [
+        "images/7G0078062.jpg",
+        "images/11G0356897.jpg",
+        "images/15G0041706.jpg",
+        "images/15G0031680.jpg",
+        "images/4G0132356.jpg",
+        "images/2G0393685.jpg",
+        "images/7G0088146.jpg",
+        "images/12G0034260.jpg",
+        "images/5G0353411.jpg",
+        "images/0G0101841.jpg"
+      ]
+    }
+  },
+  "complete": true
+}
