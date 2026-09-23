@@ -1,0 +1,9 @@
+{
+  "epochs_completed": 30,
+  "optimizer_steps": 2370,
+  "elapsed_seconds": 513.5735478690003,
+  "best_val_iou": 0.4006160396520812,
+  "best_checkpoint_sha256": "3fa39de55d0c1dd2a7debce5038703201740e3daa26e9e3f4b6a2f1dacede901",
+  "checkpoint_path": "/home/watermango/github/mower-perception-lraspp/runs/ycor-lraspp-20260921/best.pt",
+  "test_evaluated": false
+}

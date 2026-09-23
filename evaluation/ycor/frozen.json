@@ -1,0 +1,17 @@
+{
+  "checkpoint_sha256": "3fa39de55d0c1dd2a7debce5038703201740e3daa26e9e3f4b6a2f1dacede901",
+  "manifest_sha256": "4b76b3c1c60baeee012983a9eca13c78e5b484573e524bd042258029179e67d4",
+  "comparison_code_sha256": "1fbb94aa404cdd456323405f5f3c4cfc3895e0fee3506320b2d1a9cbc0f296c6",
+  "b0_source": {
+    "hub_id": "nvidia/segformer-b0-finetuned-ade-512-512",
+    "revision": "489d5cd81a0b59fab9b7ea758d3548ebe99677da"
+  },
+  "output_wh": [
+    512,
+    384
+  ],
+  "classification": "argmax after bilinear logits interpolation; align_corners=False",
+  "boundary_radius": 2,
+  "selected_epoch": 7,
+  "utc": "2026-09-21T10:08:35.483621+00:00"
+}

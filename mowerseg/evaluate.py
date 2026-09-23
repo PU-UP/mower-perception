@@ -76,6 +76,7 @@ def metrics(c):
         2 * precision * recall / (precision + recall) if precision + recall else 0.0
     )
     return {
+        "mowable_false_negative_rate": ratio(c["fn"], c["tp"] + c["fn"]),
         "mowable_iou": ratio(c["tp"], c["tp"] + c["fp"] + c["fn"]),
         "nonmowable_false_positive_rate": ratio(c["fp"], c["fp"] + c["tn"]),
         "predicted_mowable_error_fraction": ratio(c["fp"], c["tp"] + c["fp"]),

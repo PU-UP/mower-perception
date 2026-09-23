@@ -1,0 +1,25 @@
+{
+  "code_files_sha256": {
+    "mowerseg/ycor.py": "bf09920e8bd26bc9053e0a4588f177f66040f4cc1082f27a7580a363b801a204",
+    "tools/prepare_ycor.py": "897836ff06125a39079a117f228e470c92b3db3de5af7bb032072ae02fcbe370",
+    "tools/train_ycor.py": "341cb1ac5cc603ae4f3ff62b9d9a1fadfa60bf0776f385ef583dfec19fc42377",
+    "tools/compare_ycor.py": "ca58e19e58f99a04824da0669baabc50f0f5081ebe246a41cd8d27842dac413b",
+    "evaluation/ycor/split.json": "4b76b3c1c60baeee012983a9eca13c78e5b484573e524bd042258029179e67d4"
+  },
+  "base_git_revision": "33404381b745a1d23868281d35381e5416ce9fc0",
+  "launch": "CUBLAS_WORKSPACE_CONFIG=:4096:8 HF_HUB_OFFLINE=1 /home/watermango/github/mower-perception/.venv/bin/python -u -m tools.train_ycor --epochs 30 --batch-size 8 --output runs/ycor-lraspp-20260921",
+  "known_nondeterminism": "PyTorch warned nll_loss2d_forward_out_cuda_template has no deterministic implementation; seeds fixed, bitwise retraining not promised",
+  "pretrained": {
+    "architecture": "torchvision LR-ASPP MobileNetV3-Large, dilated backbone",
+    "parameters": 3218308,
+    "weights_backbone": "MobileNet_V3_Large_Weights.IMAGENET1K_V1",
+    "weights": null,
+    "head": "randomly initialized, untrained; no mowable predictions available",
+    "pretrained_url": "https://download.pytorch.org/models/mobilenet_v3_large-8738ca79.pth",
+    "pretrained_local_path": "/home/watermango/.cache/torch/hub/checkpoints/mobilenet_v3_large-8738ca79.pth",
+    "pretrained_sha256": "8738ca797c879b547d18bbd15da5736ff2557b2036a9af72225393ca61759a04",
+    "official_source_sha256": "a1518c72647a0ef1be33c1b7df1c364280054b2fc97c7907127d8794d95bbef5"
+  },
+  "training_data_use": "YCOR only; no new GrassSegHB training/evaluation",
+  "user_accepted_inferred_source_grouping": true
+}

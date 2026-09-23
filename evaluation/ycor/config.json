@@ -1,0 +1,33 @@
+{
+  "task": "ycor_traversable_grass_proxy",
+  "seed": 20260921,
+  "epochs": 30,
+  "batch_size": 8,
+  "lr": 0.001,
+  "optimizer": "AdamW",
+  "weight_decay": 0.0001,
+  "loss": "unweighted CrossEntropy, ignore_index=255",
+  "precision": "FP32, TF32 off",
+  "input_wh": [
+    512,
+    384
+  ],
+  "output_wh": [
+    512,
+    384
+  ],
+  "augmentation": "horizontal flip p=.5; brightness gain uniform .8..1.2; no crop",
+  "resize": "whole image PIL bilinear; label nearest",
+  "normalization": "RGB/255 ImageNet mean/std",
+  "pretrained": "MobileNet_V3_Large_Weights.IMAGENET1K_V1; entire head random",
+  "manifest_sha256": "4b76b3c1c60baeee012983a9eca13c78e5b484573e524bd042258029179e67d4",
+  "train_count": 628,
+  "validation_count": 293,
+  "overfit_only": false,
+  "torch": "2.14.0+cu130",
+  "device": "NVIDIA GeForce RTX 5060 Laptop GPU",
+  "selection": "highest validation aggregate positive IoU; argmax; no test access",
+  "budget": "30 epochs, at most 45 minutes; no hyperparameter search",
+  "threads": 4,
+  "deterministic_algorithms": "enabled with warn_only; CUDA interpolation may not be bitwise reproducible"
+}

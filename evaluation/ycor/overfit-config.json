@@ -1,0 +1,34 @@
+{
+  "task": "ycor_traversable_grass_proxy",
+  "seed": 20260921,
+  "epochs": null,
+  "batch_size": 4,
+  "lr": 0.003,
+  "optimizer": "AdamW",
+  "weight_decay": 0.0001,
+  "loss": "unweighted CrossEntropy, ignore_index=255",
+  "precision": "FP32, TF32 off",
+  "input_wh": [
+    512,
+    384
+  ],
+  "output_wh": [
+    512,
+    384
+  ],
+  "augmentation": "none",
+  "resize": "whole image PIL bilinear; label nearest",
+  "normalization": "RGB/255 ImageNet mean/std",
+  "pretrained": "MobileNet_V3_Large_Weights.IMAGENET1K_V1; entire head random",
+  "manifest_sha256": "4b76b3c1c60baeee012983a9eca13c78e5b484573e524bd042258029179e67d4",
+  "train_count": 4,
+  "validation_count": 0,
+  "overfit_only": true,
+  "torch": "2.14.0+cu130",
+  "device": "NVIDIA GeForce RTX 5060 Laptop GPU",
+  "selection": "overfit diagnostic only; no checkpoint selection",
+  "budget": "at most 300 optimizer updates",
+  "threads": 4,
+  "deterministic_algorithms": "enabled with warn_only; CUDA interpolation may not be bitwise reproducible",
+  "metadata_correction": "Original logger recorded formal-run defaults for these fields. Corrected from executed overfit branch; numerical run and logs unchanged."
+}

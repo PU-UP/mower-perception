@@ -1,0 +1,58 @@
+{
+  "status": "compatibility_probe_passed_training_NOT_started",
+  "utc": "2026-09-21T08:59:08.614768+00:00",
+  "base_revision": "fc293d450e025e4afdc658ed509064a1f37b4007",
+  "probe_sha256": "a3e03de81eb9a704c0d2ee05386b6305f903a24c30478ca20a3ac527e8aa6c73",
+  "training_steps": 0,
+  "trained_checkpoint": null,
+  "scope": "random diagnostic tensor; no data, labels, optimizer, accuracy or latency benchmark",
+  "software": {
+    "python": "3.10.12",
+    "torch": "2.14.0+cu130",
+    "torchvision": "0.29.0+cu130",
+    "cuda": "13.0",
+    "torchvision_commit": "fc73f5a8567734ffa4c988b24d5432f0d3005974"
+  },
+  "hardware": {
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.35",
+    "gpu": "NVIDIA GeForce RTX 5060 Laptop GPU",
+    "total_vram_bytes": 8546484224,
+    "free_disk_bytes": 837635235840,
+    "threads": 4,
+    "nvidia_smi": "NVIDIA GeForce RTX 5060 Laptop GPU, 592.27, 8151 MiB"
+  },
+  "model": {
+    "architecture": "torchvision LR-ASPP MobileNetV3-Large, dilated backbone",
+    "parameters": 3218308,
+    "weights_backbone": "MobileNet_V3_Large_Weights.IMAGENET1K_V1",
+    "weights": null,
+    "head": "randomly initialized, untrained; no mowable predictions available",
+    "pretrained_url": "https://download.pytorch.org/models/mobilenet_v3_large-8738ca79.pth",
+    "pretrained_local_path": "/home/watermango/.cache/torch/hub/checkpoints/mobilenet_v3_large-8738ca79.pth",
+    "pretrained_sha256": "8738ca797c879b547d18bbd15da5736ff2557b2036a9af72225393ca61759a04",
+    "official_source_sha256": "a1518c72647a0ef1be33c1b7df1c364280054b2fc97c7907127d8794d95bbef5"
+  },
+  "probe": {
+    "input_nchw": [
+      2,
+      3,
+      384,
+      512
+    ],
+    "output_nchw": [
+      2,
+      2,
+      384,
+      512
+    ],
+    "precision": "float32",
+    "tf32": false,
+    "finite_nonzero_gradients": [
+      "backbone",
+      "low_classifier",
+      "high_classifier"
+    ],
+    "peak_allocated_bytes": 481563136,
+    "one_cold_forward_backward_seconds_NOT_inference_latency": 0.7688905720006005
+  }
+}

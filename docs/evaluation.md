@@ -1,5 +1,7 @@
 # ADE20K CNN 与 SegFormer-B0 的割草场景初评
 
+后续已完成 **YCOR 可通行草地代理模型** 的真实 LR-ASPP 训练与 B0 对比，见 [新报告与复现命令](../evaluation/ycor/REPORT.md)。真实可割适配尚未完成；GrassSegHB 许可待解决，见 [状态与历史核查](../evaluation/LRASPP-TRAINING-STATUS.md)。下文及旧报告保留历史结果。
+
 本流程无需训练，比较的是现成 ADE20K 模型的 **grass 可割代理预测**。它不是安全可通行判定，也不验证人、动物或小障碍物的完整检测能力。不要用像素占比、置信度或演示图片替代标注评测。
 
 ## 模型与来源
@@ -92,6 +94,7 @@ python -m mowerseg.evaluate --models mit_resnet18_ade20k segformer_b0_ade20k --o
 
 * 可割 IoU = TP / (TP + FP + FN)。
 * 不可割误判可割率 = FP / (FP + TN)。
+* 漏割率 = FN / (TP + FN)；后续运行记录为 `mowable_false_negative_rate`，不改写历史冻结结果。
 * 预测可割中的错误比例 = FP / (TP + FP)。
 * 边界 F1：提取二值 mask 的四邻域标签转变，边界两侧像素都保留；不把图像外框当边界。在原标注分辨率以 3 像素 Chebyshev（方形）容差匹配两侧边界，分别算 precision/recall 再 F1。
 * 边界错误率：GT 边界的同样 3 像素扩张带内，预测错误像素 / 带内像素。不同分辨率比较时必须同时报告尺寸和半径。

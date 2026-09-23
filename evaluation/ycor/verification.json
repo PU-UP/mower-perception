@@ -1,0 +1,22 @@
+{
+  "python_tests": "44 passed",
+  "frontend": "ESLint, Next typegen, tsc --noEmit, default Turbopack build passed; frontend unchanged",
+  "new_image": "assets/samples/lawn_path.jpg",
+  "new_image_sha256": "0e1b3f69a006d85980070fe9c309a66413895243bc21f52903b30f7066029413",
+  "new_prediction_sha256": "de961434edb955e7cdfefe7d73f0d66713d26f8273a38391030b995e12db0da0",
+  "png_metadata": {
+    "Model": "YCOR 可通行草地代理模型",
+    "Labels": "0=other valid semantic classes; 1=traversable grass proxy; NOT verified mowability"
+  },
+  "checkpoint_reload_identical_sample": "iid000839",
+  "full_coverage": "145 samples/model, 290 saved masks, all hashes/shapes/label values, aggregate counts and 240 timing sums verified",
+  "split_rebuild_sha256": "4b76b3c1c60baeee012983a9eca13c78e5b484573e524bd042258029179e67d4",
+  "final_code_sha256": {
+    "mowerseg/ycor.py": "a429cb0c38c039aa0e4c5cbf23c4d0a0150e8813c9c8d6fed7503c20012eb76b",
+    "tools/prepare_ycor.py": "3f5168d30095fe3cb2d8228ed3379f61834846372fd8cf75e8bd33e8420c8528",
+    "tools/train_ycor.py": "5f45a0c18aec9f73e94f34295b846df53b676c6e775c27f79bfeff34816eace0",
+    "tools/compare_ycor.py": "1fbb94aa404cdd456323405f5f3c4cfc3895e0fee3506320b2d1a9cbc0f296c6",
+    "tests/test_ycor.py": "f3dcb33f13dc21a7dc180337829fabc1199f28a45b7d6498d2ab95a1761be21a"
+  },
+  "precision_reload_note": "First reload with default CUDA precision differed; explicitly disabling TF32 to match benchmark gives identical prediction. CLI now sets the same precision flags."
+}
