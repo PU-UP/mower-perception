@@ -39,7 +39,12 @@ def get_engine(model: str | None = None) -> InferenceEngine:
         raise HTTPException(status_code=404, detail=f"未知模型: {model_id}")
     engine = _engines.get(model_id)
     if engine is None:
-        engine = InferenceEngine(CONFIG, model=model_id)
+        try:
+            engine = InferenceEngine(CONFIG, model=model_id)
+        except (OSError, ValueError) as exc:
+            if model_id == "lraspp_ycor":
+                raise HTTPException(status_code=503, detail="YCOR 权重缺失或无效；请配置 YCOR_CHECKPOINT 指向已训练的 best.pt。") from exc
+            raise
         _engines[model_id] = engine
     return engine
 
@@ -83,6 +88,8 @@ def _run(image: Image.Image, *, model: str | None = None, truth=None) -> dict:
         from mowerseg.evaluate import counts, metrics
         evaluation = metrics(counts(result.ade_mask == 9, truth))
     return {
+        "raw_mask": (_to_data_url(Image.fromarray(result.ade_mask.astype(np.uint8)))
+                     if info.get("output_taxonomy") == "ycor_proxy" else None),
         "evaluation": evaluation,
         "evaluation_protocol": {"boundary_radius_pixels": 3} if evaluation is not None else None,
         "overlay": _to_data_url(preview_overlay, "jpeg"),

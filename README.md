@@ -145,3 +145,22 @@ cd /home/watermango/github/mower-perception
 ## 公平对比与割草场景评测
 
 参见 [评测流程、权重和数据许可](docs/evaluation.md) 与 [实测报告](evaluation/REPORT.md)。首次选择 MIT CNN 前运行 `python -m tools.download_mit_weights`。ADE20K grass 仅是可割代理；VOC 无草地类别，不参与可割准确率比较。
+
+## 已训练 YCOR 模型的网页入口
+
+在“单图试验”中选择 **YCOR 可通行草地代理模型**，可对样例或上传图片推理。
+使用 ImageNet 骨干经 YCOR 二分类训练的权重；绿色为原始标签1（可通行草地代理），灰色为0（其他有效类别）。
+它不是安全可割验证，不输出人/水体等细分类，也不参与 GrassSegHB 可割准确率计算。
+可下载原始0/1 PNG；整图输入/输出512×384，图例和占比仅有两类。
+网页“模型前向”耗时不等于离线报告的完整流水线延迟。
+
+默认加载 `weights/ycor/best.pt`（Git忽略），可通过 `YCOR_CHECKPOINT` 覆盖。
+来源、SHA-256及恢复方式见 [训练报告](evaluation/ycor/REPORT.md)。缺失或无效权重会显示明确错误，其他模型仍可用。
+本机已配置 `.env.runtime.sh`，从仓库根目录执行：
+
+```bash
+source .env.runtime.sh
+bash scripts/dev.sh
+```
+
+其他机器按上文安装环境并放入权重后运行已有 `scripts/dev.sh`。

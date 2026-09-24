@@ -95,6 +95,16 @@ def taxonomy_from_product_config(
     requires_remapping: bool | None = None,
     model_name: str | None = None,
 ) -> Taxonomy:
+    if output_taxonomy == "ycor_proxy":
+        # Binary proxy labels are not product obstacle/safety classes.
+        return Taxonomy(
+            classes=[MowerClass(0, "other_valid", "其他有效类别", (110, 116, 125), False, False),
+                     MowerClass(1, "traversable_grass", "可通行草地代理", (72, 166, 80), False, False)],
+            source_lookup=np.arange(256, dtype=np.uint8), overlay_alpha=.46,
+            input_long_side=512, model_name=model_name or "lraspp_ycor",
+            samples=list(raw.get("samples", [])), output_taxonomy="ycor_proxy",
+            requires_remapping=False,
+        )
     classes = [
         MowerClass(
             id=int(item["id"]),

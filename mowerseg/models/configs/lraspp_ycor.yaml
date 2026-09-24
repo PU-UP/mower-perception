@@ -1,0 +1,14 @@
+name: lraspp_ycor
+task: semantic_segmentation
+display_name: YCOR 可通行草地代理模型
+loader: ycor_lraspp
+artifacts:
+  torch: weights/ycor/best.pt
+input:
+  long_side: 512
+output:
+  taxonomy: ycor_proxy
+  requires_remapping: false
+  num_classes: 2
+preprocess:
+  resize_mode: ycor_fixed
