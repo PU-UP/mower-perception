@@ -41,6 +41,9 @@ class SegmentationPreprocessor:
         preprocess = self.model_config.preprocess or {}
         resize_mode = str(preprocess.get("resize_mode", "long_side"))
 
+        if resize_mode == "ycor_fixed":
+            from mowerseg.ycor import SIZE, normalize
+            return {"pixel_values": normalize(rgb.resize(SIZE, Image.Resampling.BILINEAR))[None].numpy()}
         if resize_mode == "mit_single_scale":
             width, height = rgb.size
             scale = min(float(preprocess["short_side"]) / min(width, height),

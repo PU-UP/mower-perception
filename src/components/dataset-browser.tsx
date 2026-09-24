@@ -4,6 +4,8 @@ import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
+import { YcorComparison } from "@/components/ycor-comparison"
+
 type Sample = { id: string; garden: string }
 type Detail = {
   id: string; input: string; truth: string; revision: string | null
@@ -32,7 +34,7 @@ function score(value: number | null | undefined) {
   return value == null ? "无定义" : `${(value * 100).toFixed(2)}%`
 }
 
-export function DatasetBrowser({ busy, onRun }: { busy: boolean; onRun: (id: string) => void }) {
+function GrassDatasetBrowser({ busy, onRun }: { busy: boolean; onRun: (id: string) => void }) {
   const [summary, setSummary] = useState<Summary | null>(null)
   const [summaryError, setSummaryError] = useState(false)
   const [samples, setSamples] = useState<Sample[]>([])
@@ -133,5 +135,17 @@ export function DatasetBrowser({ busy, onRun }: { busy: boolean; onRun: (id: str
       {error ? <p role="alert" className="text-sm text-destructive">{error}</p> : null}
     </CardContent>
   </Card>
+  </div>
+}
+
+
+export function DatasetBrowser(props: { busy: boolean; onRun: (id: string) => void }) {
+  const [dataset, setDataset] = useState("ycor")
+  return <div className="grid gap-5">
+    <div className="flex flex-wrap gap-2" role="group" aria-label="选择评测数据集">
+      <Button variant={dataset === "ycor" ? "default" : "outline"} aria-pressed={dataset === "ycor"} onClick={() => setDataset("ycor")}>YCOR 代理评测 · LR-ASPP / B0</Button>
+      <Button variant={dataset === "grass" ? "default" : "outline"} aria-pressed={dataset === "grass"} onClick={() => setDataset("grass")}>GrassSegHB 历史评测</Button>
+    </div>
+    {dataset === "ycor" ? <YcorComparison /> : <GrassDatasetBrowser {...props} />}
   </div>
 }

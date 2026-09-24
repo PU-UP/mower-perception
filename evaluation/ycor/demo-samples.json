@@ -1,0 +1,50 @@
+{
+  "source": "https://theairlab.org/yamaha-offroad-dataset/",
+  "license": "CC BY 4.0",
+  "citation": "Maturana, Chou, Uenoyama, Scherer (2018), Real-time semantic mapping for autonomous off-road navigation",
+  "scope": "Post-freeze illustrative samples from official valid; not a new evaluation set. Images remain local and uncommitted.",
+  "samples": [
+    {
+      "id": "ycor-demo-iid000839",
+      "file": "iid000839.jpg",
+      "title": "树荫草地",
+      "note": "明暗交界与草地",
+      "image_sha256": "cc30ac0740f3745bd8aa65e52e9d6cb7df745fb2b33e0bf93eac074481dccc30"
+    },
+    {
+      "id": "ycor-demo-iid000879",
+      "file": "iid000879.jpg",
+      "title": "土路与高草",
+      "note": "易把路侧高草误判为可通行草地",
+      "image_sha256": "de8a9348378190d1c0ec34d4fc069d08a3708226259422ce1ae4dd78c0276e82"
+    },
+    {
+      "id": "ycor-demo-iid000919",
+      "file": "iid000919.jpg",
+      "title": "暗光草地与碎石",
+      "note": "草地和碎石边界",
+      "image_sha256": "88a76de0b25c7be443537b65e8134d09b90b4ce346c6a7467c9308df5cac5876"
+    },
+    {
+      "id": "ycor-demo-iid000982",
+      "file": "iid000982.jpg",
+      "title": "林间碎石路",
+      "note": "林间道路与稀疏草地，漏检案例",
+      "image_sha256": "25ebe452ed5b8797f29c2d0067f0f829bceb4dd4a98ef1bf0a28d21d952a568f"
+    },
+    {
+      "id": "ycor-demo-iid001039",
+      "file": "iid001039.jpg",
+      "title": "落叶林地",
+      "note": "落叶覆盖与稀疏草地，漏检案例",
+      "image_sha256": "ae46e17f3b75a4845fdcf1ded43636adeac86838bfb13e079abec145e5d7528f"
+    },
+    {
+      "id": "ycor-demo-iid000843",
+      "file": "iid000843.jpg",
+      "title": "林缘宽土路",
+      "note": "裸土与路侧植被",
+      "image_sha256": "a37979357cee2e8651dafeec798b46931b7fb0041fdda6419b767c975bb6ac98"
+    }
+  ]
+}

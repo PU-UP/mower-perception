@@ -49,6 +49,16 @@ class TorchBackend(InferenceBackend):
             if model_config.output_taxonomy == "ade20k":
                 if self._model.config.num_labels != 150 or self._model.config.id2label.get(9) != "grass":
                     raise ValueError("Expected ADE20K 150 labels with grass at zero-based index 9")
+        elif model_config.loader == "ycor_lraspp":
+            import os
+            from pathlib import Path
+            from mowerseg.ycor import load_checkpoint
+
+            path = Path(os.environ.get("YCOR_CHECKPOINT") or
+                        Path(__file__).resolve().parents[2] / model_config.artifact_for("torch"))
+            self._model, _ = load_checkpoint(path, self._device_str)
+            torch.backends.cudnn.allow_tf32 = False
+            torch.backends.cuda.matmul.allow_tf32 = False
         elif model_config.loader == "mit_csail":
             import os
             from pathlib import Path
@@ -84,14 +94,16 @@ class TorchBackend(InferenceBackend):
             end = torch.cuda.Event(enable_timing=True)
             start.record()
             with torch.inference_mode():
-                outputs = self._model(**tensor_inputs)
+                outputs = (self._model(tensor_inputs["pixel_values"])["out"]
+                           if self._loader == "ycor_lraspp" else self._model(**tensor_inputs))
             end.record()
             torch.cuda.synchronize()
             latency_ms = float(start.elapsed_time(end))
         else:
             t0 = time.perf_counter()
             with torch.inference_mode():
-                outputs = self._model(**tensor_inputs)
+                outputs = (self._model(tensor_inputs["pixel_values"])["out"]
+                           if self._loader == "ycor_lraspp" else self._model(**tensor_inputs))
             latency_ms = (time.perf_counter() - t0) * 1000.0
 
         logits = outputs.logits if hasattr(outputs, "logits") else outputs

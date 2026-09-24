@@ -61,14 +61,19 @@ class SemanticSegmentationTask(PerceptionTask):
         logits = raw["logits"]
         latency_ms = float(raw.get("latency_ms", 0.0))
 
-        width, height = frame.image.size
+        image = frame.image
+        if self.model_config.output_taxonomy == "ycor_proxy":
+            from PIL import Image
+            from mowerseg.ycor import SIZE
+            image = image.resize(SIZE, Image.Resampling.BILINEAR)
+        width, height = image.size
         raw_mask = logits_to_label_mask(logits, (height, width))
         class_mask = apply_taxonomy_remap(
             raw_mask,
             self.taxonomy,
             requires_remapping=self.model_config.requires_remapping,
         )
-        views = build_semantic_views(frame.image, class_mask, self.taxonomy)
+        views = build_semantic_views(image, class_mask, self.taxonomy)
 
         result = SemanticResult(
             frame_id=frame.frame_id,
@@ -78,7 +83,7 @@ class SemanticSegmentationTask(PerceptionTask):
             backend=self.backend.name,
             device=self.backend.device,
             task=self.name,
-            image=frame.image,
+            image=image,
             class_mask=class_mask,
             raw_mask=raw_mask,
             color_mask=views["color_mask"],

@@ -15,6 +15,7 @@ from fastapi.responses import FileResponse
 from PIL import Image
 
 from mowerseg.infer import InferenceEngine
+from mowerseg.ycor_report import summary as ycor_summary_report, demo_samples, demo_image
 from mowerseg.models.registry import list_model_cards, list_models
 from mowerseg.taxonomy import load_product_config, load_taxonomy
 from mowerseg.visualize import encode_jpeg, encode_png, fit_long_side
@@ -39,7 +40,12 @@ def get_engine(model: str | None = None) -> InferenceEngine:
         raise HTTPException(status_code=404, detail=f"未知模型: {model_id}")
     engine = _engines.get(model_id)
     if engine is None:
-        engine = InferenceEngine(CONFIG, model=model_id)
+        try:
+            engine = InferenceEngine(CONFIG, model=model_id)
+        except (OSError, ValueError) as exc:
+            if model_id == "lraspp_ycor":
+                raise HTTPException(status_code=503, detail="YCOR 权重缺失或无效；请配置 YCOR_CHECKPOINT 指向已训练的 best.pt。") from exc
+            raise
         _engines[model_id] = engine
     return engine
 
@@ -83,6 +89,8 @@ def _run(image: Image.Image, *, model: str | None = None, truth=None) -> dict:
         from mowerseg.evaluate import counts, metrics
         evaluation = metrics(counts(result.ade_mask == 9, truth))
     return {
+        "raw_mask": (_to_data_url(Image.fromarray(result.ade_mask.astype(np.uint8)))
+                     if info.get("output_taxonomy") == "ycor_proxy" else None),
         "evaluation": evaluation,
         "evaluation_protocol": {"boundary_radius_pixels": 3} if evaluation is not None else None,
         "overlay": _to_data_url(preview_overlay, "jpeg"),
@@ -176,7 +184,7 @@ def taxonomy(model: str | None = Query(default=None)) -> dict:
             }
             for item in cfg.classes
         ],
-        "samples": cfg.samples,
+        "samples": cfg.samples + demo_samples(),
     }
 
 
@@ -198,6 +206,12 @@ def infer_sample(
     sample_id: str,
     model: str | None = Query(default=None),
 ) -> dict:
+    if sample_id.startswith("ycor-demo-"):
+        try:
+            image = demo_image(sample_id)
+        except (OSError, ValueError) as exc:
+            raise HTTPException(status_code=409, detail=str(exc)) from exc
+        return _run(image, model=model)
     if sample_id.startswith("grass-"):
         from mowerseg.evaluate import load_pair
         sample = grass_sample(sample_id.removeprefix("grass-"))
@@ -313,3 +327,11 @@ def grass_summary():
                     "original_sizes": sorted({tuple(s["original_size"]) for s in value["samples"]})}
                    for key, value in report["models"].items()],
     }
+
+
+@app.get("/api/ycor-summary")
+def ycor_summary():
+    try:
+        return ycor_summary_report()
+    except (OSError, ValueError, KeyError, TypeError):
+        return {"available": False, "reason": "YCOR 完整报告缺失或校验失败，请恢复 evaluation/ycor 中的冻结报告。"}

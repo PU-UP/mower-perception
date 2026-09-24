@@ -146,6 +146,8 @@ export function Playground() {
     models.find((item) => item.id === modelId) ||
     models.find((item) => item.id === result?.model?.id)
 
+  const isYcor = activeModel?.output_taxonomy === "ycor_proxy"
+
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-8 sm:px-6 lg:py-10">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -157,7 +159,7 @@ export function Playground() {
             割草场景分割评估
           </h1>
           <p className="mt-3 text-sm leading-7 text-muted-foreground sm:text-base">
-            用标注数据集比较模型的整体表现，或选择一张图片试验分割效果。草地识别仅作可割代理，不代表可安全通行。
+            用标注数据集比较模型的整体表现，或选择一张图片试验分割效果。草地识别仅作代理；YCOR 可通行草地标签不代表安全可割。
           </p>
         </div>
 
@@ -181,7 +183,7 @@ export function Playground() {
           <CardHeader className="border-b">
             <CardTitle>推理结果</CardTitle>
             <CardDescription>
-              绿为可割草坪，红/橙为安全类，灰为铺装，深蓝绿为灌木。
+              {isYcor ? "绿色为可通行草地代理，灰色为其他有效类别；不是安全可割判断。" : "绿为可割草坪，红/橙为安全类，灰为铺装，深蓝绿为灌木。"}
             </CardDescription>
           </CardHeader>
           <CardContent className="pt-4">
@@ -295,8 +297,9 @@ export function Playground() {
                     </Button>
                   ))}
                 </div>
+                {isYcor && result.raw_mask ? <a className="text-xs underline" href={result.raw_mask} download="ycor-binary-mask.png">下载原始 0/1 掩码</a> : null}
                 <p className="text-xs text-muted-foreground">
-                  模型推理 {result.stats.latency_ms.toFixed(0)} ms · {result.stats.device} ·{" "}
+                  模型前向（非完整流水线） {result.stats.latency_ms.toFixed(0)} ms · {result.stats.device} ·{" "}
                   {result.model?.display_name ||
                     activeModel?.display_name ||
                     result.stats.model.split("/").at(-1)}
@@ -307,8 +310,9 @@ export function Playground() {
             {result?.evaluation ? (
               <div className="mt-4"><p className="mb-2 text-sm">本次推理与人工标注比较（边界容差 {result.evaluation_protocol?.boundary_radius_pixels ?? "未记录"} 像素）</p><EvaluationMetrics metrics={result.evaluation} /></div>
             ) : null}
-            {activeSample.startsWith("grass-") ? <p className="mt-2 text-xs text-muted-foreground">评测样本：{activeSample.slice(6)}；切换模型保持同一张图。VOC 无草地类别，不计算可割指标。</p> : null}
+            {activeSample.startsWith("grass-") ? <p className="mt-2 text-xs text-muted-foreground">评测样本：{activeSample.slice(6)}；切换模型保持同一张图。VOC 无草地类别；YCOR 是可通行草地代理。两者均不在此计算可割指标。</p> : null}
 
+            {activeSample.startsWith("ycor-demo-") ? <p className="mt-2 text-xs text-muted-foreground">{taxonomy?.samples.find(s => s.id === activeSample)?.note} · 来源：YCOR，CC BY 4.0，Maturana 等（2018）。来自官方 valid 的演示样例，不是新测试集；本次单图推理不计算可割准确率。</p> : null}
             {error ? (
               <p className="mt-3 text-sm text-destructive">{error}</p>
             ) : null}
@@ -339,13 +343,13 @@ export function Playground() {
               <div className="flex items-center justify-between gap-3">
                 <span className="text-muted-foreground">训练数据集</span>
                 <span className="text-right">
-                  {activeModel?.output_taxonomy ||
+                  {isYcor ? "YCOR" : activeModel?.output_taxonomy ||
                     result?.model?.output_taxonomy ||
                     "—"}
                 </span>
               </div>
               <p className="text-xs leading-5 text-muted-foreground">
-                {activeModel?.output_taxonomy === "pascal_voc"
+                {isYcor ? "YCOR 二分类训练模型：仅区分可通行草地与其他有效类别。不能识别人、动物或水体等细分类，也不能证明安全可割。" : activeModel?.output_taxonomy === "pascal_voc"
                   ? "PASCAL VOC 是模型训练所用的数据集，其中没有草地类别，不能用于比较可割草地识别能力。"
                   : "ADE20K 是模型训练所用的通用场景分割数据集，包含草地等 150 类。它不是模型名，也不是这次的割草评测集。这里只把其中的 grass（草地）作为可割代理。"}
               </p>
@@ -361,11 +365,11 @@ export function Playground() {
             <CardHeader>
               <CardTitle>产品类别</CardTitle>
               <CardDescription>
-                模型输出统一显示为以下类别；草地不等于安全通行。
+                {isYcor ? "原始标签 0=其他有效类别，1=可通行草地代理；两类都不构成通行许可。" : "模型输出统一显示为以下类别；草地不等于安全通行。"}
               </CardDescription>
             </CardHeader>
             <CardContent className="grid gap-2">
-              {(taxonomy?.classes ?? [])
+              {(result?.taxonomy ?? (isYcor ? [] : taxonomy?.classes) ?? [])
                 .filter((item) => item.name !== "ignore")
                 .map((item) => (
                   <div key={item.id} className="flex items-center justify-between gap-3">
@@ -377,7 +381,7 @@ export function Playground() {
                       <span className="text-sm">{item.name_zh}</span>
                     </div>
                     <span className="text-xs text-muted-foreground">
-                      {item.traversable ? "可通行" : item.safety ? "安全" : "禁止"}
+                      {isYcor ? "代理标签" : item.traversable ? "可通行" : item.safety ? "安全" : "禁止"}
                     </span>
                   </div>
                 ))}
@@ -394,18 +398,18 @@ export function Playground() {
                 <div className="grid gap-4">
                   <div className="grid grid-cols-2 gap-3">
                     <div className="rounded-lg bg-muted px-3 py-2">
-                      <p className="text-xs text-muted-foreground">可割草坪</p>
+                      <p className="text-xs text-muted-foreground">{isYcor ? "可通行草地代理" : "可割草坪"}</p>
                       <p className="font-heading text-xl">
-                        {percent(result.stats.traversable_ratio)}
+                        {percent(isYcor ? (result.stats.classes.find((item) => item.id === 1)?.ratio ?? 0) : result.stats.traversable_ratio)}
                       </p>
                     </div>
                     <div className="rounded-lg bg-muted px-3 py-2">
                       <p className="flex items-center gap-1 text-xs text-muted-foreground">
                         <ShieldAlert className="size-3" />
-                        安全类
+                        {isYcor ? "其他有效类别" : "安全类"}
                       </p>
                       <p className="font-heading text-xl">
-                        {percent(result.stats.safety_ratio)}
+                        {percent(isYcor ? (result.stats.classes.find((item) => item.id === 0)?.ratio ?? 0) : result.stats.safety_ratio)}
                       </p>
                     </div>
                   </div>
