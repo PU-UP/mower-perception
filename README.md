@@ -164,3 +164,9 @@ bash scripts/dev.sh
 ```
 
 其他机器按上文安装环境并放入权重后运行已有 `scripts/dev.sh`。
+
+### 数据集横向对比与更多样例
+
+“数据集横向对比”默认展示 YCOR 冻结留出集上的 LR-ASPP/B0 真实效果、分阶段速度和诊断分组，数字读取自 `evaluation/ycor/results.json`，校验清单摘要、完整样本覆盖、混淆计数和时间分位数。可切换 GrassSegHB 历史结果，两套分数不混合。
+
+本机新增六张 YCOR 场景（树荫草地、土路高草、暗光碎石、林间碎石路、落叶林地、林缘土路），存于忽略目录 `data/ycor-demo/`，未发布原图。来源、CC BY 4.0 引用与摘要见 `evaluation/ycor/demo-samples.json`。只展示已安装样例；其他机器可从官网下载包中，按清单ID将 `yamaha_v0/valid/<iid>/rgb.jpg` 复制为 `data/ycor-demo/<iid>.jpg`，摘要必须一致。这些是冻结后的演示样例，包含失败场景，不替代完整留出评测。

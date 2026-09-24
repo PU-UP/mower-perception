@@ -15,6 +15,7 @@ from fastapi.responses import FileResponse
 from PIL import Image
 
 from mowerseg.infer import InferenceEngine
+from mowerseg.ycor_report import summary as ycor_summary_report, demo_samples, demo_image
 from mowerseg.models.registry import list_model_cards, list_models
 from mowerseg.taxonomy import load_product_config, load_taxonomy
 from mowerseg.visualize import encode_jpeg, encode_png, fit_long_side
@@ -183,7 +184,7 @@ def taxonomy(model: str | None = Query(default=None)) -> dict:
             }
             for item in cfg.classes
         ],
-        "samples": cfg.samples,
+        "samples": cfg.samples + demo_samples(),
     }
 
 
@@ -205,6 +206,12 @@ def infer_sample(
     sample_id: str,
     model: str | None = Query(default=None),
 ) -> dict:
+    if sample_id.startswith("ycor-demo-"):
+        try:
+            image = demo_image(sample_id)
+        except (OSError, ValueError) as exc:
+            raise HTTPException(status_code=409, detail=str(exc)) from exc
+        return _run(image, model=model)
     if sample_id.startswith("grass-"):
         from mowerseg.evaluate import load_pair
         sample = grass_sample(sample_id.removeprefix("grass-"))
@@ -320,3 +327,11 @@ def grass_summary():
                     "original_sizes": sorted({tuple(s["original_size"]) for s in value["samples"]})}
                    for key, value in report["models"].items()],
     }
+
+
+@app.get("/api/ycor-summary")
+def ycor_summary():
+    try:
+        return ycor_summary_report()
+    except (OSError, ValueError, KeyError, TypeError):
+        return {"available": False, "reason": "YCOR 完整报告缺失或校验失败，请恢复 evaluation/ycor 中的冻结报告。"}

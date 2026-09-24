@@ -312,6 +312,7 @@ export function Playground() {
             ) : null}
             {activeSample.startsWith("grass-") ? <p className="mt-2 text-xs text-muted-foreground">评测样本：{activeSample.slice(6)}；切换模型保持同一张图。VOC 无草地类别；YCOR 是可通行草地代理。两者均不在此计算可割指标。</p> : null}
 
+            {activeSample.startsWith("ycor-demo-") ? <p className="mt-2 text-xs text-muted-foreground">{taxonomy?.samples.find(s => s.id === activeSample)?.note} · 来源：YCOR，CC BY 4.0，Maturana 等（2018）。来自官方 valid 的演示样例，不是新测试集；本次单图推理不计算可割准确率。</p> : null}
             {error ? (
               <p className="mt-3 text-sm text-destructive">{error}</p>
             ) : null}
